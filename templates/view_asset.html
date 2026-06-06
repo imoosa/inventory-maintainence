@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-info-circle"></i> Asset Details</h2>
+<hr>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4>{{ item.name }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>🔖 Asset Information</h5>
+                        <table class="table table-sm">
+                            <tr><th>Asset Code:</th><td><code>{{ item.asset_code }}</code></td></tr>
+                            <tr><th>Serial Number:</th><td>{{ item.serial_number or '-' }}</td></tr>
+                            <tr><th>Brand:</th><td>{{ item.brand or '-' }}</td></tr>
+                            <tr><th>Model:</th><td>{{ item.model or '-' }}</td></tr>
+                            <tr><th>Supplier:</th><td>{{ item.supplier or '-' }}</td></tr>
+                            <tr><th>Purchase Date:</th><td>{{ item.purchase_date.strftime('%Y-%m-%d') if item.purchase_date else '-' }}</td></tr>
+                            <tr><th>Purchase Cost:</th><td>${{ "%.2f"|format(item.purchase_cost) if item.purchase_cost else '-' }}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>📦 General Information</h5>
+                        <table class="table table-sm">
+                            <tr><th>Category:</th><td>{{ item.category or '-' }}</td></tr>
+                            <tr><th>Location:</th><td>{{ item.location or '-' }}</td></tr>
+                            <tr><th>Quantity:</th><td>{{ item.quantity }}</td></tr>
+                            <tr><th>Current Value:</th><td>${{ "%.2f"|format(item.value) if item.value else '-' }}</td></tr>
+                            <tr><th>Condition:</th><td><span class="badge bg-info">{{ item.condition or '-' }}</span></td></tr>
+                            <tr><th>Reorder Level:</th><td>{{ item.reorder_level }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>🛡️ Warranty & Insurance</h5>
+                        <table class="table table-sm">
+                            <tr><th>Warranty Expiry:</th><td>{{ item.warranty_expiry.strftime('%Y-%m-%d') if item.warranty_expiry else '-' }}</td></tr>
+                            <tr><th>Insurance Expiry:</th><td>{{ item.insurance_expiry.strftime('%Y-%m-%d') if item.insurance_expiry else '-' }}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>📅 Dates</h5>
+                        <table class="table table-sm">
+                            <tr><th>Created:</th><td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+                            <tr><th>Last Updated:</th><td>{{ item.updated_at.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('edit_item', id=item.id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="{{ url_for('generate_barcode', item_id=item.id) }}" class="btn btn-success">
+                        <i class="fas fa-qrcode"></i> Generate Barcode
+                    </a>
+                    <button onclick="window.print()" class="btn btn-secondary">
+                        <i class="fas fa-print"></i> Print Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        {% if item.photo %}
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5>Photo / Document</h5>
+            </div>
+            <div class="card-body">
+                <img src="{{ url_for('static', filename='uploads/' + item.photo) }}" class="img-fluid" alt="Asset Photo">
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="card mt-3">
+            <div class="card-header bg-success text-white">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#serviceModal">
+                    <i class="fas fa-clipboard"></i> Add Service Log
+                </button>
+                <button class="btn btn-outline-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#maintenanceModal">
+                    <i class="fas fa-tools"></i> Schedule Maintenance
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Service Log Modal -->
+<div class="modal fade" id="serviceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Add Service Log: {{ item.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('add_service_log', item_id=item.id) }}" method="POST">
+                <div class="modal-body">
+                    <input type="date" name="service_date" class="form-control mb-2" value="{{ now.strftime('%Y-%m-%d') if now else '' }}" required>
+                    <input type="text" name="performed_by" class="form-control mb-2" placeholder="Performed By" required>
+                    <textarea name="actions" class="form-control mb-2" placeholder="Actions Taken" rows="2" required></textarea>
+                    <textarea name="parts_used" class="form-control mb-2" placeholder="Parts Used" rows="2"></textarea>
+                    <input type="number" name="cost" class="form-control mb-2" placeholder="Cost" step="0.01">
+                    <input type="date" name="next_service_due" class="form-control mb-2" placeholder="Next Service Due">
+                    <textarea name="notes" class="form-control mb-2" placeholder="Notes" rows="2"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

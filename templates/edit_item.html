@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-edit"></i> Edit Asset: {{ item.asset_code }}</h2>
+<hr>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <!-- ASSET INFORMATION -->
+            <h5 class="bg-info text-white p-2">🔖 Asset / Barcode Information</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Asset Code</label>
+                        <input type="text" name="asset_code" class="form-control" value="{{ item.asset_code }}" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Serial Number</label>
+                        <input type="text" name="serial_number" class="form-control" value="{{ item.serial_number or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Brand</label>
+                        <input type="text" name="brand" class="form-control" value="{{ item.brand or '' }}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Model</label>
+                        <input type="text" name="model" class="form-control" value="{{ item.model or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Supplier</label>
+                        <input type="text" name="supplier" class="form-control" value="{{ item.supplier or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Purchase Date</label>
+                        <input type="date" name="purchase_date" class="form-control" 
+                               value="{{ item.purchase_date.strftime('%Y-%m-%d') if item.purchase_date else '' }}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Purchase Cost ($)</label>
+                        <input type="number" name="purchase_cost" class="form-control" step="0.01" 
+                               value="{{ item.purchase_cost or 0 }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Item Name</label>
+                        <input type="text" name="name" class="form-control" value="{{ item.name }}" required>
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <!-- GENERAL INFORMATION -->
+            <h5 class="bg-secondary text-white p-2">📦 General Information</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Category</label>
+                        <input type="text" name="category" class="form-control" value="{{ item.category or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Location</label>
+                        <input type="text" name="location" class="form-control" value="{{ item.location or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Quantity</label>
+                        <input type="number" name="quantity" class="form-control" value="{{ item.quantity }}" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Current Value ($)</label>
+                        <input type="number" name="value" class="form-control" step="0.01" value="{{ item.value or 0 }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Condition</label>
+                        <select name="condition" class="form-control">
+                            <option value="New" {% if item.condition == 'New' %}selected{% endif %}>New</option>
+                            <option value="Good" {% if item.condition == 'Good' %}selected{% endif %}>Good</option>
+                            <option value="Fair" {% if item.condition == 'Fair' %}selected{% endif %}>Fair</option>
+                            <option value="Poor" {% if item.condition == 'Poor' %}selected{% endif %}>Poor</option>
+                            <option value="Damaged" {% if item.condition == 'Damaged' %}selected{% endif %}>Damaged</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Change Photo</label>
+                        <input type="file" name="photo" class="form-control" accept="image/*,application/pdf">
+                        {% if item.photo %}
+                            <small>Current: {{ item.photo }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Reorder Level</label>
+                        <input type="number" name="reorder_level" class="form-control" value="{{ item.reorder_level or 0 }}">
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <!-- WARRANTY & INSURANCE -->
+            <h5 class="bg-warning text-dark p-2">🛡️ Warranty & Insurance</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Warranty Expiry</label>
+                        <input type="date" name="warranty_expiry" class="form-control" 
+                               value="{{ item.warranty_expiry.strftime('%Y-%m-%d') if item.warranty_expiry else '' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Insurance Expiry</label>
+                        <input type="date" name="insurance_expiry" class="form-control" 
+                               value="{{ item.insurance_expiry.strftime('%Y-%m-%d') if item.insurance_expiry else '' }}">
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Update Asset</button>
+            <a href="{{ url_for('inventory') }}" class="btn btn-secondary">Cancel</a>
+            <a href="{{ url_for('generate_barcode', item_id=item.id) }}" class="btn btn-success">
+                <i class="fas fa-qrcode"></i> Generate Barcode
+            </a>
+        </form>
+    </div>
+</div>
+
+<hr>
+<h5>Schedule Maintenance</h5>
+<div class="card">
+    <div class="card-body">
+        <form action="{{ url_for('schedule_maintenance', item_id=item.id) }}" method="POST">
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Due Date</label>
+                    <input type="date" name="due_date" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label>Frequency (days)</label>
+                    <input type="number" name="frequency_days" class="form-control" placeholder="Leave empty for one-time">
+                </div>
+                <div class="col-md-4">
+                    <label>Notes</label>
+                    <input type="text" name="notes" class="form-control">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success mt-2">Schedule Maintenance</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

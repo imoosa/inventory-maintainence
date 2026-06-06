@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-tools"></i> Maintenance Schedule</h2>
+<hr>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Item</th>
+                <th>Due Date</th>
+                <th>Frequency</th>
+                <th>Status</th>
+                <th>Last Performed</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for maint in maintenance_items %}
+            <tr class="{% if maint.status == 'overdue' %}table-danger{% elif maint.status == 'pending' %}table-warning{% endif %}">
+                <td>{{ maint.item.name }}</td>
+                <td>{{ maint.due_date.strftime('%Y-%m-%d') }}</td>
+                <td>{% if maint.frequency_days %}Every {{ maint.frequency_days }} days{% else %}One-time{% endif %}</td>
+                <td>
+                    <span class="badge {% if maint.status == 'completed' %}bg-success{% elif maint.status == 'overdue' %}bg-danger{% else %}bg-warning{% endif %}">
+                        {{ maint.status }}
+                    </span>
+                </td>
+                <td>{{ maint.last_performed.strftime('%Y-%m-%d') if maint.last_performed else '-' }}</td>
+                <td>
+                    {% if maint.status != 'completed' %}
+                    <form action="{{ url_for('complete_maintenance', id=maint.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-success">Mark Complete</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

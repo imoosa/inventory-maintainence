@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-clipboard-list"></i> Service Logs</h2>
+<hr>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Item</th>
+                <th>Service Date</th>
+                <th>Performed By</th>
+                <th>Actions</th>
+                <th>Parts Used</th>
+                <th>Cost</th>
+                <th>Next Service Due</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.item.name }}</td>
+                <td>{{ log.service_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ log.performed_by }}</td>
+                <td>{{ log.actions[:50] }}{% if log.actions|length > 50 %}...{% endif %}</td>
+                <td>{{ log.parts_used[:50] if log.parts_used else '-' }}</td>
+                <td>${{ "%.2f"|format(log.cost) }}</td>
+                <td>{{ log.next_service_due.strftime('%Y-%m-%d') if log.next_service_due else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

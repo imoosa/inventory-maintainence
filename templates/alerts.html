@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-bell"></i> Alerts & Notifications</h2>
+<hr>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Type</th>
+                <th>Item</th>
+                <th>Message</th>
+                <th>Triggered At</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alert in alerts %}
+            <tr class="{% if not alert.is_read %}table-danger{% endif %}">
+                <td>
+                    <span class="badge 
+                        {% if alert.alert_type == 'warranty' %}bg-info
+                        {% elif alert.alert_type == 'maintenance' %}bg-warning
+                        {% elif alert.alert_type == 'low_quantity' %}bg-danger
+                        {% else %}bg-secondary{% endif %}">
+                        {{ alert.alert_type|upper }}
+                    </span>
+                </td>
+                <td>{{ alert.item.name if alert.item else 'System' }}</td>
+                <td>{{ alert.message }}</td>
+                <td>{{ alert.triggered_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    {% if alert.resolved_at %}
+                        <span class="badge bg-success">Resolved</span>
+                    {% elif alert.is_read %}
+                        <span class="badge bg-secondary">Read</span>
+                    {% else %}
+                        <span class="badge bg-danger">Unread</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not alert.resolved_at %}
+                    <a href="{{ url_for('resolve_alert', id=alert.id) }}" class="btn btn-sm btn-success">
+                        <i class="fas fa-check"></i> Resolve
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

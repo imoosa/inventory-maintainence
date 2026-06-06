@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-qrcode"></i> Asset Barcode: {{ item.asset_code }}</h2>
+<hr>
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card text-center">
+            <div class="card-header bg-info text-white">
+                <h4>{{ item.name }}</h4>
+            </div>
+            <div class="card-body">
+                <img src="data:image/png;base64,{{ barcode_img }}" alt="Barcode" class="img-fluid">
+                
+                <hr>
+                <div class="text-start">
+                    <p><strong>Asset Code:</strong> {{ item.asset_code }}</p>
+                    <p><strong>Serial Number:</strong> {{ item.serial_number or 'N/A' }}</p>
+                    <p><strong>Brand:</strong> {{ item.brand or 'N/A' }}</p>
+                    <p><strong>Model:</strong> {{ item.model or 'N/A' }}</p>
+                    <p><strong>Location:</strong> {{ item.location or 'N/A' }}</p>
+                </div>
+                
+                <div class="mt-3">
+                    <button onclick="window.print()" class="btn btn-primary">
+                        <i class="fas fa-print"></i> Print Barcode
+                    </button>
+                    <a href="{{ url_for('edit_item', id=item.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-edit"></i> Edit Asset
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> 
+            <strong>How to use:</strong> Print and stick this barcode on the asset. Scan with any QR code scanner or use the in-app scanner.
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .sidebar, .navbar, .btn, .alert {
+            display: none !important;
+        }
+        .col-md-6 {
+            width: 100% !important;
+        }
+    }
+</style>
+{% endblock %}

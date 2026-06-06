@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-plus"></i> Add New Asset</h2>
+<hr>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <!-- ASSET INFORMATION SECTION -->
+            <h5 class="bg-info text-white p-2">🔖 Asset / Barcode Information</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Asset Code * (for barcode)</label>
+                        <input type="text" name="asset_code" class="form-control" required 
+                               placeholder="e.g., AST-001, INV-2024-001">
+                        <small class="text-muted">This will be your barcode identifier</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Serial Number</label>
+                        <input type="text" name="serial_number" class="form-control" 
+                               placeholder="e.g., SN123456789">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Brand</label>
+                        <input type="text" name="brand" class="form-control" 
+                               placeholder="e.g., Samsung, LG, Apple">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Model</label>
+                        <input type="text" name="model" class="form-control" 
+                               placeholder="e.g., XYZ-1000">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Supplier / Vendor</label>
+                        <input type="text" name="supplier" class="form-control" 
+                               placeholder="e.g., Amazon, Local Dealer">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Purchase Date</label>
+                        <input type="date" name="purchase_date" class="form-control">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Purchase Cost ($)</label>
+                        <input type="number" name="purchase_cost" class="form-control" step="0.01" 
+                               placeholder="Original purchase price">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Item Name *</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <!-- GENERAL INFORMATION -->
+            <h5 class="bg-secondary text-white p-2">📦 General Information</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Category</label>
+                        <input type="text" name="category" class="form-control" 
+                               placeholder="e.g., Electronics, Furniture">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Location</label>
+                        <input type="text" name="location" class="form-control" 
+                               placeholder="e.g., Warehouse A, Room 101">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Quantity</label>
+                        <input type="number" name="quantity" class="form-control" value="1" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Current Value ($)</label>
+                        <input type="number" name="value" class="form-control" step="0.01" 
+                               placeholder="Current market value">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Condition</label>
+                        <select name="condition" class="form-control">
+                            <option value="New">New</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                            <option value="Damaged">Damaged</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label>Photo / Document</label>
+                        <input type="file" name="photo" class="form-control" accept="image/*,application/pdf">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Reorder Level (Low Stock Alert)</label>
+                        <input type="number" name="reorder_level" class="form-control" value="0">
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <!-- WARRANTY & INSURANCE -->
+            <h5 class="bg-warning text-dark p-2">🛡️ Warranty & Insurance</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Warranty Expiry Date</label>
+                        <input type="date" name="warranty_expiry" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Insurance Expiry Date</label>
+                        <input type="date" name="insurance_expiry" class="form-control">
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Save Asset</button>
+            <a href="{{ url_for('inventory') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

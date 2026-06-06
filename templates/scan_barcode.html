@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-camera"></i> Scan Barcode</h2>
+<hr>
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4>Scan Asset Barcode</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label>Enter Asset Code</label>
+                        <input type="text" name="asset_code" class="form-control form-control-lg" 
+                               placeholder="Scan or type asset code" autofocus>
+                        <small class="text-muted">You can also use a barcode scanner hardware</small>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="fas fa-search"></i> Find Asset
+                    </button>
+                </form>
+                
+                <hr>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-mobile-alt"></i>
+                    <strong>Mobile Scanning:</strong><br>
+                    On Android, use the camera to scan QR codes or use a Bluetooth barcode scanner.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- For mobile camera access (requires HTTPS) -->
+<div class="row mt-4">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h5>Camera Scanner (Beta)</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="reader" style="width: 100%;"></div>
+                <button onclick="startScanner()" class="btn btn-primary mt-2">
+                    <i class="fas fa-camera"></i> Start Camera
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<script>
+function startScanner() {
+    const html5QrCode = new Html5Qrcode("reader");
+    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+        // When barcode is scanned, submit the form
+        document.querySelector('input[name="asset_code"]').value = decodedText;
+        document.querySelector('form').submit();
+    };
+    
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        qrCodeSuccessCallback
+    ).catch(err => {
+        alert("Camera error: " + err);
+    });
+}
+</script>
+{% endblock %}
