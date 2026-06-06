@@ -33,7 +33,7 @@ XlsxWriter
 
 # Charts & Visualization
 plotly
-chart.js
+
 
 # HTTP & APIs
 requests
