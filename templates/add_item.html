@@ -1,164 +1,352 @@
 {% extends "base.html" %}
+{% block title %}{% if item is defined %}Edit Asset{% else %}Add Asset{% endif %} — AssetPro{% endblock %}
+{% block topbar_title %}{% if item is defined %}Edit Asset{% else %}Add Asset{% endif %}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .form-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .form-section-header {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-elevated);
+  }
+  .form-section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .form-section-body { padding: 18px; }
+  .grid-form-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-form-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+  .file-upload {
+    border: 1px dashed var(--border-bright);
+    border-radius: 3px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .file-upload:hover { border-color: var(--accent); background: var(--accent-glow); }
+  .file-upload input { display: none; }
+  .file-upload-label { font-size: 12px; color: var(--text-muted); cursor: pointer; }
+  .file-upload-label i { display: block; font-size: 20px; margin-bottom: 6px; color: var(--accent); }
+  .rating-stars { display: flex; gap: 4px; }
+  .rating-stars input { display: none; }
+  .rating-stars label {
+    font-size: 18px; cursor: pointer; color: var(--text-muted);
+    transition: color 0.1s;
+  }
+  .rating-stars input:checked ~ label,
+  .rating-stars label:hover,
+  .rating-stars label:hover ~ label { color: var(--accent); }
+
+  @media (max-width: 768px) {
+    .grid-form-2, .grid-form-3 { grid-template-columns: 1fr; }
+    .col-span-2, .col-span-3 { grid-column: span 1; }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<h2><i class="fas fa-plus"></i> Add New Asset</h2>
-<hr>
-
-<div class="card">
-    <div class="card-body">
-        <form method="POST" enctype="multipart/form-data">
-            <!-- ASSET INFORMATION SECTION -->
-            <h5 class="bg-info text-white p-2">🔖 Asset / Barcode Information</h5>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Asset Code * (for barcode)</label>
-                        <input type="text" name="asset_code" class="form-control" required 
-                               placeholder="e.g., AST-001, INV-2024-001">
-                        <small class="text-muted">This will be your barcode identifier</small>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Serial Number</label>
-                        <input type="text" name="serial_number" class="form-control" 
-                               placeholder="e.g., SN123456789">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Brand</label>
-                        <input type="text" name="brand" class="form-control" 
-                               placeholder="e.g., Samsung, LG, Apple">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Model</label>
-                        <input type="text" name="model" class="form-control" 
-                               placeholder="e.g., XYZ-1000">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Supplier / Vendor</label>
-                        <input type="text" name="supplier" class="form-control" 
-                               placeholder="e.g., Amazon, Local Dealer">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Purchase Date</label>
-                        <input type="date" name="purchase_date" class="form-control">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Purchase Cost ($)</label>
-                        <input type="number" name="purchase_cost" class="form-control" step="0.01" 
-                               placeholder="Original purchase price">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Item Name *</label>
-                        <input type="text" name="name" class="form-control" required>
-                    </div>
-                </div>
-            </div>
-            
-            <hr>
-            
-            <!-- GENERAL INFORMATION -->
-            <h5 class="bg-secondary text-white p-2">📦 General Information</h5>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Category</label>
-                        <input type="text" name="category" class="form-control" 
-                               placeholder="e.g., Electronics, Furniture">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Location</label>
-                        <input type="text" name="location" class="form-control" 
-                               placeholder="e.g., Warehouse A, Room 101">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Quantity</label>
-                        <input type="number" name="quantity" class="form-control" value="1" required>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Current Value ($)</label>
-                        <input type="number" name="value" class="form-control" step="0.01" 
-                               placeholder="Current market value">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Condition</label>
-                        <select name="condition" class="form-control">
-                            <option value="New">New</option>
-                            <option value="Good">Good</option>
-                            <option value="Fair">Fair</option>
-                            <option value="Poor">Poor</option>
-                            <option value="Damaged">Damaged</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Photo / Document</label>
-                        <input type="file" name="photo" class="form-control" accept="image/*,application/pdf">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Reorder Level (Low Stock Alert)</label>
-                        <input type="number" name="reorder_level" class="form-control" value="0">
-                    </div>
-                </div>
-            </div>
-            
-            <hr>
-            
-            <!-- WARRANTY & INSURANCE -->
-            <h5 class="bg-warning text-dark p-2">🛡️ Warranty & Insurance</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Warranty Expiry Date</label>
-                        <input type="date" name="warranty_expiry" class="form-control">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Insurance Expiry Date</label>
-                        <input type="date" name="insurance_expiry" class="form-control">
-                    </div>
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">Save Asset</button>
-            <a href="{{ url_for('inventory') }}" class="btn btn-secondary">Cancel</a>
-        </form>
-    </div>
+<div class="page-header">
+  <div>
+    <div class="page-title">{% if item is defined %}EDIT ASSET{% else %}NEW ASSET{% endif %}</div>
+    <div class="page-subtitle">{% if item is defined %}// UPDATING: {{ item.name }}{% else %}// REGISTER A NEW ASSET{% endif %}</div>
+  </div>
+  <a href="{{ url_for('inventory') }}" class="btn btn-outline">
+    <i class="fa-solid fa-arrow-left"></i> Back
+  </a>
 </div>
+
+<form method="POST" enctype="multipart/form-data"
+      action="{{ url_for('edit_item', id=item.id) if item is defined else url_for('add_item') }}">
+
+  <!-- Basic Info -->
+  <div class="form-section">
+    <div class="form-section-header">
+      <i class="fa-solid fa-tag text-accent"></i>
+      <span class="form-section-title">Basic Information</span>
+    </div>
+    <div class="form-section-body">
+      <div class="grid-form-3">
+        <div class="form-group col-span-2">
+          <label class="form-label">Asset Name *</label>
+          <input type="text" name="name" class="form-control"
+                 value="{{ item.name if item is defined else form.get('name','') }}"
+                 placeholder="e.g. Dell PowerEdge R740 Server" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Asset Code</label>
+          <input type="text" name="asset_code" class="form-control"
+                 value="{{ item.asset_code if item is defined else form.get('asset_code','') }}"
+                 placeholder="Auto-generated if blank">
+          <div class="form-hint">Leave blank to auto-generate</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          <select name="category_id" class="form-control" required>
+            <option value="">— Select Category —</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}"
+              {% if (item is defined and item.category_id == cat.id) or (form is defined and form.get('category_id')|string == cat.id|string) %}selected{% endif %}>
+              {{ cat.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sub-Category</label>
+          <input type="text" name="sub_category" class="form-control"
+                 value="{{ item.sub_category if item is defined else form.get('sub_category','') }}"
+                 placeholder="e.g. Rack Server">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Supplier</label>
+          <select name="supplier_id" class="form-control">
+            <option value="">— No Supplier —</option>
+            {% for sup in suppliers %}
+            <option value="{{ sup.id }}"
+              {% if item is defined and item.supplier_id == sup.id %}selected{% endif %}>
+              {{ sup.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Brand</label>
+          <input type="text" name="brand" class="form-control"
+                 value="{{ item.brand if item is defined else '' }}" placeholder="e.g. Dell">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Model</label>
+          <input type="text" name="model" class="form-control"
+                 value="{{ item.model if item is defined else '' }}" placeholder="e.g. R740">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Serial Number</label>
+          <input type="text" name="serial_number" class="form-control"
+                 value="{{ item.serial_number if item is defined else '' }}" placeholder="Unique serial">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location & Quantity -->
+  <div class="form-section">
+    <div class="form-section-header">
+      <i class="fa-solid fa-location-dot text-accent"></i>
+      <span class="form-section-title">Location & Quantity</span>
+    </div>
+    <div class="form-section-body">
+      <div class="grid-form-3">
+        <div class="form-group col-span-2">
+          <label class="form-label">Location</label>
+          <input type="text" name="location" class="form-control"
+                 value="{{ item.location if item is defined else '' }}"
+                 placeholder="e.g. Server Room, Floor 2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantity *</label>
+          <input type="number" name="quantity" class="form-control" min="0"
+                 value="{{ item.quantity if item is defined else form.get('quantity', 1) }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reorder Level</label>
+          <input type="number" name="reorder_level" class="form-control" min="0"
+                 value="{{ item.reorder_level if item is defined else 0 }}">
+          <div class="form-hint">Alert when qty falls to this</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Condition</label>
+          <select name="condition" class="form-control">
+            <option value="">— Select —</option>
+            {% for c in ['New','Excellent','Good','Fair','Poor'] %}
+            <option {% if item is defined and item.condition == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-control">
+            <option value="active" {% if item is defined and item.status == 'active' %}selected{% endif %}>Active</option>
+            <option value="under_maintenance" {% if item is defined and item.status == 'under_maintenance' %}selected{% endif %}>Under Maintenance</option>
+            <option value="retired" {% if item is defined and item.status == 'retired' %}selected{% endif %}>Retired</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Financial -->
+  <div class="form-section">
+    <div class="form-section-header">
+      <i class="fa-solid fa-indian-rupee-sign text-accent"></i>
+      <span class="form-section-title">Financial Details</span>
+    </div>
+    <div class="form-section-body">
+      <div class="grid-form-3">
+        <div class="form-group">
+          <label class="form-label">Purchase Cost (₹)</label>
+          <input type="number" name="purchase_cost" class="form-control" step="0.01"
+                 value="{{ item.purchase_cost if item is defined else '' }}" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Depreciation Rate (%/yr)</label>
+          <input type="number" name="depreciation_rate" class="form-control" step="0.1"
+                 value="{{ item.depreciation_rate if item is defined else 10 }}" placeholder="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Purchase Date</label>
+          <input type="date" name="purchase_date" class="form-control"
+                 value="{{ item.purchase_date.strftime('%Y-%m-%d') if item is defined and item.purchase_date else '' }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dates & Warranties -->
+  <div class="form-section">
+    <div class="form-section-header">
+      <i class="fa-solid fa-calendar text-accent"></i>
+      <span class="form-section-title">Warranty & Insurance</span>
+    </div>
+    <div class="form-section-body">
+      <div class="grid-form-2">
+        <div class="form-group">
+          <label class="form-label">Warranty Expiry</label>
+          <input type="date" name="warranty_expiry" class="form-control"
+                 value="{{ item.warranty_expiry.strftime('%Y-%m-%d') if item is defined and item.warranty_expiry else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Insurance Expiry</label>
+          <input type="date" name="insurance_expiry" class="form-control"
+                 value="{{ item.insurance_expiry.strftime('%Y-%m-%d') if item is defined and item.insurance_expiry else '' }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMC -->
+  <div class="form-section">
+    <div class="form-section-header">
+      <i class="fa-solid fa-file-contract text-accent"></i>
+      <span class="form-section-title">AMC (Annual Maintenance Contract)</span>
+    </div>
+    <div class="form-section-body">
+      <div class="grid-form-2">
+        <div class="form-group col-span-2">
+          <label class="form-label">AMC Provider</label>
+          <input type="text" name="amc_provider" class="form-control"
+                 value="{{ item.amc_provider if item is defined else '' }}" placeholder="Provider company name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">AMC Start Date</label>
+          <input type="date" name="amc_start_date" class="form-control"
+                 value="{{ item.amc_start_date.strftime('%Y-%m-%d') if item is defined and item.amc_start_date else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">AMC End Date</label>
+          <input type="date" name="amc_end_date" class="form-control"
+                 value="{{ item.amc_end_date.strftime('%Y-%m-%d') if item is defined and item.amc_end_date else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">AMC Cost (₹)</label>
+          <input type="number" name="amc_cost" class="form-control" step="0.01"
+                 value="{{ item.amc_cost if item is defined and item.amc_cost else '' }}" placeholder="0.00">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo -->
+  <div class="form-section">
+    <div class="form-section-header">
+      <i class="fa-solid fa-image text-accent"></i>
+      <span class="form-section-title">Photo & Documents</span>
+    </div>
+    <div class="form-section-body">
+      <div class="grid-form-2">
+        <div class="form-group">
+          <label class="form-label">Asset Photo</label>
+          <label class="file-upload" id="photoLabel">
+            <input type="file" name="photo" accept="image/*" onchange="previewPhoto(this)">
+            <div class="file-upload-label">
+              <i class="fa-solid fa-camera"></i>
+              <span id="photoName">Click to upload photo</span>
+            </div>
+            {% if item is defined and item.photo %}
+            <img src="{{ url_for('static', filename='uploads/photos/' + item.photo) }}"
+                 id="photoPreview" style="max-height:80px;margin-top:8px;border-radius:3px;">
+            {% else %}
+            <img id="photoPreview" style="display:none;max-height:80px;margin-top:8px;border-radius:3px;">
+            {% endif %}
+          </label>
+        </div>
+        <div>
+          <div class="form-group">
+            <label class="form-label">Invoice</label>
+            <label class="file-upload" style="padding:10px">
+              <input type="file" name="invoice" accept=".pdf,.jpg,.png,.doc,.docx">
+              <div class="file-upload-label">
+                <i class="fa-solid fa-file-invoice" style="display:inline;font-size:14px;margin-right:6px"></i>
+                <span>Upload invoice</span>
+              </div>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Warranty Card</label>
+            <label class="file-upload" style="padding:10px">
+              <input type="file" name="warranty_card" accept=".pdf,.jpg,.png">
+              <div class="file-upload-label">
+                <i class="fa-solid fa-shield-halved" style="display:inline;font-size:14px;margin-right:6px"></i>
+                <span>Upload warranty card</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex gap-8" style="justify-content:flex-end">
+    <a href="{{ url_for('inventory') }}" class="btn btn-outline btn-lg">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-lg">
+      <i class="fa-solid fa-{% if item is defined %}floppy-disk{% else %}plus{% endif %}"></i>
+      {% if item is defined %}Save Changes{% else %}Register Asset{% endif %}
+    </button>
+  </div>
+
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function previewPhoto(input) {
+  const preview = document.getElementById('photoPreview');
+  const name = document.getElementById('photoName');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      name.textContent = input.files[0].name;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
 {% endblock %}

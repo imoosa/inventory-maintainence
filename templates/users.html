@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Users — AssetPro{% endblock %}
+{% block topbar_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">USERS</div>
+    <div class="page-subtitle">// TEAM ACCESS MANAGEMENT — {{ users|length }} MEMBERS</div>
+  </div>
+  <a href="{{ url_for('add_user') }}" class="btn btn-primary">
+    <i class="fa-solid fa-user-plus"></i> Add User
+  </a>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    {% if users %}
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr style="opacity: {% if not u.is_active %}0.5{% else %}1{% endif %}">
+          <td>
+            <div class="flex gap-8">
+              <div style="width:32px;height:32px;background:{% if u.role == 'admin' %}var(--accent){% elif u.role == 'manager' %}var(--info){% else %}var(--bg-elevated){% endif %};border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;color:{% if u.role == 'admin' %}#000{% else %}var(--text-secondary){% endif %};flex-shrink:0;">
+                {{ u.username[:2].upper() }}
+              </div>
+              <div>
+                <div style="font-weight:500; color:var(--text-primary)">{{ u.username }}</div>
+                {% if u.id == current_user.id %}<div style="font-family:var(--mono); font-size:9px; color:var(--accent)">YOU</div>{% endif %}
+              </div>
+            </div>
+          </td>
+          <td style="font-size:12px"><a href="mailto:{{ u.email }}" style="color:var(--info)">{{ u.email }}</a></td>
+          <td style="font-family:var(--mono); font-size:12px; color:var(--text-muted)">{{ u.phone or '—' }}</td>
+          <td><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
+          <td>
+            <span class="badge {% if u.is_active %}badge-active{% else %}badge-retired{% endif %}">
+              {% if u.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+          </td>
+          <td style="font-family:var(--mono); font-size:11px; color:var(--text-muted)">
+            {{ u.created_at.strftime('%d %b %Y') }}
+          </td>
+          <td>
+            <div class="flex gap-8">
+              {% if u.id != current_user.id %}
+              <form method="POST" action="{{ url_for('toggle_user', id=u.id) }}" style="display:inline">
+                <button class="btn {% if u.is_active %}btn-danger{% else %}btn-success{% endif %} btn-sm">
+                  <i class="fa-solid fa-{% if u.is_active %}ban{% else %}circle-check{% endif %}"></i>
+                  {% if u.is_active %}Disable{% else %}Enable{% endif %}
+                </button>
+              </form>
+              {% else %}
+              <span style="font-family:var(--mono); font-size:9px; color:var(--text-muted)">CURRENT</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <i class="fa-solid fa-users"></i>
+      <p>No users found</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,134 +1,244 @@
 {% extends "base.html" %}
+{% block title %}Dashboard — AssetPro{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .dash-full { grid-column: 1 / -1; }
+  .chart-container { height: 220px; position: relative; }
+  .alert-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-icon {
+    width: 28px; height: 28px;
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+  }
+  .alert-icon.warranty  { background: rgba(88,166,255,0.15); color: #58a6ff; }
+  .alert-icon.maintenance { background: var(--warning-bg); color: var(--accent); }
+  .alert-icon.low_stock { background: var(--danger-bg); color: var(--danger); }
+  .alert-icon.insurance { background: rgba(188,140,255,0.15); color: #c0a0ff; }
+  .alert-icon.amc       { background: rgba(46,160,67,0.15); color: #56d364; }
+  .alert-meta { font-family: var(--mono); font-size: 9px; color: var(--text-muted); margin-top: 2px; letter-spacing: 0.5px; }
+  .maintenance-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .maintenance-row:last-child { border-bottom: none; }
+  .due-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .due-overdue { background: var(--danger-bg); color: var(--danger); }
+  .due-soon    { background: var(--warning-bg); color: var(--accent); }
+  .due-ok      { background: var(--info-bg); color: var(--info); }
+</style>
+{% endblock %}
 
 {% block content %}
-<h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
-<hr>
-
-<div class="row">
-    <div class="col-md-3">
-        <div class="stat-card text-center">
-            <i class="fas fa-boxes fa-3x"></i>
-            <h3 class="mt-2">{{ total_items }}</h3>
-            <p>Total Assets</p>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-            <div class="text-center">
-                <i class="fas fa-exclamation-triangle fa-3x"></i>
-                <h3 class="mt-2">{{ low_stock_items }}</h3>
-                <p>Low Stock Items</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-            <div class="text-center">
-                <i class="fas fa-tools fa-3x"></i>
-                <h3 class="mt-2">{{ pending_maintenance }}</h3>
-                <p>Pending Maintenance</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-            <div class="text-center">
-                <i class="fas fa-dollar-sign fa-3x"></i>
-                <h3 class="mt-2">${{ "%.0f"|format(total_maintenance_cost) }}</h3>
-                <p>Total Maint. Cost</p>
-            </div>
-        </div>
-    </div>
+<div class="page-header">
+  <div>
+    <div class="page-title">DASHBOARD</div>
+    <div class="page-subtitle">// SYSTEM OVERVIEW · {{ now.strftime('%d %b %Y') if now is defined else '' }}</div>
+  </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <i class="fas fa-chart-bar"></i> Asset Value by Category
-            </div>
-            <div class="card-body">
-                <canvas id="categoryChart" height="250"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <i class="fas fa-chart-line"></i> Monthly Maintenance Cost
-            </div>
-            <div class="card-body">
-                <canvas id="costChart" height="250"></canvas>
-            </div>
-        </div>
-    </div>
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card c-accent">
+    <div class="stat-label">Total Assets</div>
+    <div class="stat-value">{{ total_items }}</div>
+    <div class="stat-sub">across all categories</div>
+  </div>
+  <div class="stat-card c-danger">
+    <div class="stat-label">Low Stock</div>
+    <div class="stat-value">{{ low_stock_items }}</div>
+    <div class="stat-sub">below reorder level</div>
+  </div>
+  <div class="stat-card c-warning" style="--bg-warning: rgba(232,160,32,0.12);">
+    <div class="stat-label">Pending Maintenance</div>
+    <div class="stat-value" style="color: var(--accent);">{{ pending_maintenance }}</div>
+    <div class="stat-sub">scheduled tasks</div>
+  </div>
+  <div class="stat-card c-info">
+    <div class="stat-label">Maintenance Spend</div>
+    <div class="stat-value" style="font-size:22px; padding-top:6px;">₹{{ "{:,.0f}".format(total_maintenance_cost or 0) }}</div>
+    <div class="stat-sub">total logged cost</div>
+  </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-warning">
-                <i class="fas fa-bell"></i> Recent Alerts
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr><th>Type</th><th>Asset</th><th>Message</th><th>Time</th><th>Status</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for alert in recent_alerts %}
-                            <tr class="{% if not alert.is_read %}table-danger{% endif %}">
-                                <td><span class="badge bg-warning">{{ alert.alert_type }}</span></td>
-                                <td>{{ alert.item.name if alert.item else '-' }}</td>
-                                <td>{{ alert.message[:50] }}...</td>
-                                <td>{{ alert.triggered_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                                <td>{% if alert.resolved_at %}Resolved{% else %}Active{% endif %}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Charts + lists grid -->
+<div class="dash-grid">
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Monthly cost chart -->
+  <div class="card">
+    <div class="card-header">
+      <i class="fa-solid fa-chart-line text-accent"></i>
+      <span class="card-title">Monthly Maintenance Cost</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="costChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category breakdown -->
+  <div class="card">
+    <div class="card-header">
+      <i class="fa-solid fa-chart-pie text-accent"></i>
+      <span class="card-title">Asset Value by Category</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="catChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent alerts -->
+  <div class="card">
+    <div class="card-header">
+      <i class="fa-solid fa-bell text-accent"></i>
+      <span class="card-title">Recent Alerts</span>
+      <a href="{{ url_for('alerts') }}" class="btn btn-outline btn-sm ml-auto">View All</a>
+    </div>
+    <div class="card-body">
+      {% if recent_alerts %}
+        {% for alert in recent_alerts %}
+        <div class="alert-row">
+          <div class="alert-icon {{ alert.alert_type }}">
+            <i class="fa-solid fa-{% if alert.alert_type == 'warranty' %}shield-halved{% elif alert.alert_type == 'maintenance' %}screwdriver-wrench{% elif alert.alert_type == 'low_stock' %}box-open{% elif alert.alert_type == 'insurance' %}file-shield{% else %}bell{% endif %}"></i>
+          </div>
+          <div>
+            <div style="color: var(--text-primary); font-size:12px;">{{ alert.message }}</div>
+            <div class="alert-meta">{{ alert.alert_type.upper().replace('_',' ') }} · {{ alert.triggered_at.strftime('%d %b') }}</div>
+          </div>
+          {% if not alert.is_read %}
+          <div style="width:6px;height:6px;background:var(--accent);border-radius:50%;margin-left:auto;flex-shrink:0;"></div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding:24px 0">
+          <i class="fa-solid fa-check-circle" style="color:var(--success);opacity:1"></i>
+          <p style="margin-top:8px">No active alerts</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Upcoming maintenance -->
+  <div class="card">
+    <div class="card-header">
+      <i class="fa-solid fa-calendar-check text-accent"></i>
+      <span class="card-title">Upcoming Maintenance</span>
+      <a href="{{ url_for('maintenance') }}" class="btn btn-outline btn-sm ml-auto">View All</a>
+    </div>
+    <div class="card-body">
+      {% if upcoming_maintenance %}
+        {% for ms in upcoming_maintenance %}
+        {% set days_left = (ms.due_date.date() - now.date()).days if now is defined else 0 %}
+        <div class="maintenance-row">
+          <div>
+            <div style="color:var(--text-primary)">{{ ms.item.name if ms.item else 'Unknown' }}</div>
+            <div class="alert-meta">{{ ms.item.asset_code if ms.item else '' }}</div>
+          </div>
+          <span class="due-badge {% if days_left < 0 %}due-overdue{% elif days_left <= 7 %}due-soon{% else %}due-ok{% endif %}">
+            {% if days_left < 0 %}{{ days_left|abs }}d OVERDUE{% elif days_left == 0 %}TODAY{% else %}{{ days_left }}d{% endif %}
+          </span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding:24px 0">
+          <i class="fa-solid fa-calendar-check" style="color:var(--success);opacity:1"></i>
+          <p style="margin-top:8px">No upcoming maintenance</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
-// Category chart
-var ctx1 = document.getElementById('categoryChart').getContext('2d');
-var categoryChart = new Chart(ctx1, {
+  const chartDefaults = {
+    color: '#8b96a5',
+    borderColor: '#2a3040',
+    font: { family: "'IBM Plex Mono', monospace", size: 10 }
+  };
+  Chart.defaults.color = chartDefaults.color;
+  Chart.defaults.borderColor = chartDefaults.borderColor;
+  Chart.defaults.font = chartDefaults.font;
+
+  // Monthly cost chart
+  const monthlyData = {{ monthly_costs | tojson }};
+  new Chart(document.getElementById('costChart'), {
     type: 'bar',
     data: {
-        labels: [{% for cat in category_values %}'{{ cat[0] }}',{% endfor %}],
-        datasets: [{
-            label: 'Asset Value ($)',
-            data: [{% for cat in category_values %}{{ cat[1] or 0 }},{% endfor %}],
-            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }]
+      labels: monthlyData.map(d => d.month || d[0]),
+      datasets: [{
+        label: 'Cost (₹)',
+        data: monthlyData.map(d => d.cost || d[1]),
+        backgroundColor: 'rgba(232,160,32,0.3)',
+        borderColor: '#e8a020',
+        borderWidth: 1,
+        borderRadius: 2
+      }]
     },
-    options: { responsive: true, maintainAspectRatio: true }
-});
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#1c2128' } },
+        y: { grid: { color: '#1c2128' }, ticks: { callback: v => '₹' + (v/1000).toFixed(0) + 'k' } }
+      }
+    }
+  });
 
-// Monthly cost chart
-var ctx2 = document.getElementById('costChart').getContext('2d');
-var costChart = new Chart(ctx2, {
-    type: 'line',
+  // Category chart
+  const catData = {{ category_values | tojson }};
+  const COLORS = ['#e8a020','#58a6ff','#2ea043','#f85149','#bc8cff','#79c0ff','#56d364','#ffa657'];
+  new Chart(document.getElementById('catChart'), {
+    type: 'doughnut',
     data: {
-        labels: [{% for m in monthly_costs %}'{{ m.month }}',{% endfor %}],
-        datasets: [{
-            label: 'Maintenance Cost ($)',
-            data: [{% for m in monthly_costs %}{{ m.cost }},{% endfor %}],
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 2,
-            fill: true
-        }]
+      labels: catData.map(d => d.category || d[0]),
+      datasets: [{
+        data: catData.map(d => d.value || d[1]),
+        backgroundColor: COLORS,
+        borderColor: '#161b22',
+        borderWidth: 2
+      }]
     },
-    options: { responsive: true, maintainAspectRatio: true }
-});
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12 } }
+      }
+    }
+  });
 </script>
 {% endblock %}

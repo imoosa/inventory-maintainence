@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-edit"></i> Edit Supplier: {{ supplier.name }}</h2>
+<hr>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>Supplier Name *</label>
+                        <input type="text" name="name" class="form-control" value="{{ supplier.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Contact Person</label>
+                        <input type="text" name="contact_person" class="form-control" value="{{ supplier.contact_person or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label>Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ supplier.email or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label>Phone</label>
+                        <input type="tel" name="phone" class="form-control" value="{{ supplier.phone or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label>Alternative Phone</label>
+                        <input type="tel" name="alternative_phone" class="form-control" value="{{ supplier.alternative_phone or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label>GST Number</label>
+                        <input type="text" name="gst_number" class="form-control" value="{{ supplier.gst_number or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label>Payment Terms</label>
+                        <input type="text" name="payment_terms" class="form-control" value="{{ supplier.payment_terms or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label>Rating (1-5)</label>
+                        <select name="rating" class="form-control">
+                            <option value="5" {% if supplier.rating == 5 %}selected{% endif %}>★★★★★ (Excellent)</option>
+                            <option value="4" {% if supplier.rating == 4 %}selected{% endif %}>★★★★☆ (Good)</option>
+                            <option value="3" {% if supplier.rating == 3 %}selected{% endif %}>★★★☆☆ (Average)</option>
+                            <option value="2" {% if supplier.rating == 2 %}selected{% endif %}>★★☆☆☆ (Poor)</option>
+                            <option value="1" {% if supplier.rating == 1 %}selected{% endif %}>★☆☆☆☆ (Very Poor)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Address</label>
+                        <textarea name="address" class="form-control" rows="3">{{ supplier.address or '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <button type="submit" class="btn btn-primary">Update Supplier</button>
+            <a href="{{ url_for('suppliers') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+<!-- Items supplied by this supplier -->
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <i class="fas fa-boxes"></i> Items Supplied by {{ supplier.name }}
+    </div>
+    <div class="card-body">
+        {% if supplier.items %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Asset Code</th>
+                        <th>Item Name</th>
+                        <th>Purchase Cost</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in supplier.items %}
+                    <tr>
+                        <td><code>{{ item.asset_code }}</code></td>
+                        <td><a href="{{ url_for('view_asset', item_id=item.id) }}">{{ item.name }}</a></td>
+                        <td>₹{{ "%.2f"|format(item.purchase_cost) }}</td>
+                        <td>{{ item.location or '-' }}</td>
+                        <td><span class="badge bg-success">{{ item.status }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No items supplied by this vendor yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

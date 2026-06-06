@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+<hr>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <i class="fas fa-boxes fa-3x"></i>
+            <h3 class="mt-2">{{ total_items }}</h3>
+            <p>Total Assets</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle fa-3x"></i>
+                <h3 class="mt-2">{{ low_stock_items }}</h3>
+                <p>Low Stock Items</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="text-center">
+                <i class="fas fa-tools fa-3x"></i>
+                <h3 class="mt-2">{{ pending_maintenance }}</h3>
+                <p>Pending Maintenance</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <div class="text-center">
+                <i class="fas fa-dollar-sign fa-3x"></i>
+                <h3 class="mt-2">₹{{ "%.0f"|format(total_maintenance_cost) }}</h3>
+                <p>Total Maint. Cost</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-chart-bar"></i> Asset Value by Category
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-chart-line"></i> Monthly Maintenance Cost
+            </div>
+            <div class="card-body">
+                <canvas id="costChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <i class="fas fa-bell"></i> Recent Alerts
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr><th>Type</th><th>Asset</th><th>Message</th><th>Time</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for alert in recent_alerts %}
+                            <tr class="{% if not alert.is_read %}table-danger{% endif %}">
+                                <td><span class="badge bg-warning">{{ alert.alert_type }}</span></td>
+                                <td>{{ alert.item.name if alert.item else '-' }}</td>
+                                <td>{{ alert.message | truncate(50) }}</td>
+                                <td>{{ alert.triggered_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{% if alert.resolved_at %}Resolved{% else %}Active{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Category chart
+var ctx1 = document.getElementById('categoryChart').getContext('2d');
+var categoryChart = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+        labels: [{% for cat in category_values %}'{{ cat[0] }}',{% endfor %}],
+        datasets: [{
+            label: 'Asset Value ($)',
+            data: [{% for cat in category_values %}{{ cat[1] or 0 }},{% endfor %}],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: true }
+});
+
+// Monthly cost chart
+var ctx2 = document.getElementById('costChart').getContext('2d');
+var costChart = new Chart(ctx2, {
+    type: 'line',
+    data: {
+        labels: [{% for m in monthly_costs %}'{{ m.month }}',{% endfor %}],
+        datasets: [{
+            label: 'Maintenance Cost ($)',
+            data: [{% for m in monthly_costs %}{{ m.cost }},{% endfor %}],
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2,
+            fill: true
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: true }
+});
+</script>
+{% endblock %}

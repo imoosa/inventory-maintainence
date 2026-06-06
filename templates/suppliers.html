@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Suppliers — AssetPro{% endblock %}
+{% block topbar_title %}Suppliers{% endblock %}
+
+{% block extra_head %}
+<style>
+  .rating-display { color: var(--accent); font-size: 12px; }
+  .rating-empty { color: var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">SUPPLIERS</div>
+    <div class="page-subtitle">// VENDOR DIRECTORY — {{ suppliers|length }} REGISTERED</div>
+  </div>
+  <a href="{{ url_for('add_supplier') }}" class="btn btn-primary">
+    <i class="fa-solid fa-plus"></i> Add Supplier
+  </a>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    {% if suppliers %}
+    <table>
+      <thead>
+        <tr>
+          <th>Supplier</th>
+          <th>Contact</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>GST No.</th>
+          <th>Rating</th>
+          <th>Assets</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sup in suppliers %}
+        <tr>
+          <td>
+            <div style="font-weight:500; color:var(--text-primary)">{{ sup.name }}</div>
+            {% if sup.address %}<div style="font-size:11px; color:var(--text-muted)">{{ sup.address[:50] }}{% if sup.address|length > 50 %}…{% endif %}</div>{% endif %}
+          </td>
+          <td>{{ sup.contact_person or '—' }}</td>
+          <td>
+            {% if sup.email %}
+            <a href="mailto:{{ sup.email }}" style="color:var(--info); font-size:12px">{{ sup.email }}</a>
+            {% else %}—{% endif %}
+          </td>
+          <td style="font-family:var(--mono); font-size:12px">{{ sup.phone or '—' }}</td>
+          <td style="font-family:var(--mono); font-size:11px; color:var(--text-muted)">{{ sup.gst_number or '—' }}</td>
+          <td>
+            {% for i in range(5) %}
+            <i class="fa-{% if i < sup.rating %}solid{% else %}regular{% endif %} fa-star {% if i < sup.rating %}rating-display{% else %}rating-empty{% endif %}"></i>
+            {% endfor %}
+          </td>
+          <td style="font-family:var(--mono)">{{ sup.items|length }}</td>
+          <td>
+            <div class="flex gap-8">
+              <a href="{{ url_for('edit_supplier', id=sup.id) }}" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-pen"></i>
+              </a>
+              <form method="POST" action="{{ url_for('delete_supplier', id=sup.id) }}" style="display:inline"
+                    onsubmit="return confirm('Delete supplier {{ sup.name }}?')">
+                <button class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <i class="fa-solid fa-truck"></i>
+      <p>No suppliers yet</p>
+      <a href="{{ url_for('add_supplier') }}" class="btn btn-primary" style="margin-top:16px">Add First Supplier</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

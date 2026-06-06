@@ -1,43 +1,146 @@
 {% extends "base.html" %}
+{% block title %}Maintenance — AssetPro{% endblock %}
+{% block topbar_title %}Maintenance{% endblock %}
+
+{% block extra_head %}
+<style>
+  .priority-bar {
+    display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .pri-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    border-radius: 4px;
+    flex: 1; min-width: 120px;
+    text-align: center;
+  }
+  .pri-stat .pval { font-family: var(--display); font-size: 28px; }
+  .pri-stat .plabel { font-family: var(--mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1px; margin-top: 2px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<h2><i class="fas fa-tools"></i> Maintenance Schedule</h2>
-<hr>
+<div class="page-header">
+  <div>
+    <div class="page-title">MAINTENANCE</div>
+    <div class="page-subtitle">// SCHEDULED SERVICE TRACKING</div>
+  </div>
+  <div class="flex gap-8">
+    <a href="{{ url_for('add_maintenance') }}" class="btn btn-primary">
+      <i class="fa-solid fa-plus"></i> Schedule
+    </a>
+  </div>
+</div>
 
-<div class="table-responsive">
-    <table class="table table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>Item</th>
-                <th>Due Date</th>
-                <th>Frequency</th>
-                <th>Status</th>
-                <th>Last Performed</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for maint in maintenance_items %}
-            <tr class="{% if maint.status == 'overdue' %}table-danger{% elif maint.status == 'pending' %}table-warning{% endif %}">
-                <td>{{ maint.item.name }}</td>
-                <td>{{ maint.due_date.strftime('%Y-%m-%d') }}</td>
-                <td>{% if maint.frequency_days %}Every {{ maint.frequency_days }} days{% else %}One-time{% endif %}</td>
-                <td>
-                    <span class="badge {% if maint.status == 'completed' %}bg-success{% elif maint.status == 'overdue' %}bg-danger{% else %}bg-warning{% endif %}">
-                        {{ maint.status }}
-                    </span>
-                </td>
-                <td>{{ maint.last_performed.strftime('%Y-%m-%d') if maint.last_performed else '-' }}</td>
-                <td>
-                    {% if maint.status != 'completed' %}
-                    <form action="{{ url_for('complete_maintenance', id=maint.id) }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-sm btn-success">Mark Complete</button>
-                    </form>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
+<!-- Priority stats -->
+<div class="priority-bar">
+  <div class="pri-stat">
+    <div class="pval" style="color:var(--danger)">{{ schedules|selectattr('status','eq','overdue')|list|length }}</div>
+    <div class="plabel">OVERDUE</div>
+  </div>
+  <div class="pri-stat">
+    <div class="pval" style="color:var(--accent)">{{ schedules|selectattr('status','eq','pending')|list|length }}</div>
+    <div class="plabel">PENDING</div>
+  </div>
+  <div class="pri-stat">
+    <div class="pval" style="color:var(--success)">{{ schedules|selectattr('status','eq','completed')|list|length }}</div>
+    <div class="plabel">COMPLETED</div>
+  </div>
+  <div class="pri-stat">
+    <div class="pval" style="color:var(--info)">{{ schedules|list|length }}</div>
+    <div class="plabel">TOTAL</div>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <form method="GET" action="{{ url_for('maintenance') }}">
+    <div class="search-bar" style="margin-bottom:0">
+      <select name="status" class="form-control" style="width:150px;">
+        <option value="">All Status</option>
+        {% for s in ['pending','completed','overdue','escalated'] %}
+        <option value="{{ s }}" {% if request.args.get('status') == s %}selected{% endif %}>{{ s.title() }}</option>
+        {% endfor %}
+      </select>
+      <select name="priority" class="form-control" style="width:140px;">
+        <option value="">All Priority</option>
+        {% for p in ['low','normal','high','critical'] %}
+        <option value="{{ p }}" {% if request.args.get('priority') == p %}selected{% endif %}>{{ p.title() }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filter</button>
+      <a href="{{ url_for('maintenance') }}" class="btn btn-outline">Clear</a>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    {% if schedules %}
+    <table>
+      <thead>
+        <tr>
+          <th>Asset</th>
+          <th>Due Date</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Assigned To</th>
+          <th>Frequency</th>
+          <th>Cost</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ms in schedules %}
+        <tr>
+          <td>
+            {% if ms.item %}
+            <a href="{{ url_for('view_asset', item_id=ms.item.id) }}" style="font-weight:500">{{ ms.item.name }}</a>
+            <div style="font-family:var(--mono); font-size:10px; color:var(--text-muted)">{{ ms.item.asset_code }}</div>
+            {% else %}—{% endif %}
+          </td>
+          <td style="font-family:var(--mono); font-size:12px">
+            {{ ms.due_date.strftime('%d %b %Y') }}
+            {% if ms.status == 'overdue' %}
+            <div style="color:var(--danger); font-size:9px">OVERDUE</div>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge {% if ms.priority == 'critical' %}badge-overdue{% elif ms.priority == 'high' %}badge-pending{% elif ms.priority == 'normal' %}badge-active{% else %}badge-user{% endif %}">
+              {{ ms.priority }}
+            </span>
+          </td>
+          <td><span class="badge badge-{{ ms.status }}">{{ ms.status }}</span></td>
+          <td style="color:var(--text-secondary); font-size:12px">{{ ms.assigned_to or '—' }}</td>
+          <td style="font-family:var(--mono); font-size:11px; color:var(--text-muted)">
+            {% if ms.frequency_days %}Every {{ ms.frequency_days }}d{% else %}One-time{% endif %}
+          </td>
+          <td style="font-family:var(--mono); font-size:12px">
+            {% if ms.total_cost %}₹{{ "{:,.0f}".format(ms.total_cost) }}{% else %}—{% endif %}
+          </td>
+          <td>
+            <div class="flex gap-8">
+              {% if ms.status != 'completed' %}
+              <a href="{{ url_for('complete_maintenance', schedule_id=ms.id) }}" class="btn btn-success btn-sm" title="Complete">
+                <i class="fa-solid fa-check"></i>
+              </a>
+              {% endif %}
+              <a href="{{ url_for('edit_maintenance', schedule_id=ms.id) }}" class="btn btn-outline btn-sm" title="Edit">
+                <i class="fa-solid fa-pen"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
+    {% else %}
+    <div class="empty-state">
+      <i class="fa-solid fa-calendar-check"></i>
+      <p>No maintenance schedules found</p>
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

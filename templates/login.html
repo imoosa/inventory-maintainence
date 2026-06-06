@@ -1,30 +1,391 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — AssetPro ERP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0a0c0f;
+      --bg2: #111418;
+      --card: #161b22;
+      --border: #2a3040;
+      --accent: #e8a020;
+      --text: #e8ecf0;
+      --muted: #505a68;
+      --secondary: #8b96a5;
+      --danger: #f85149;
+      --danger-bg: rgba(248,81,73,0.1);
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+      --display: 'Bebas Neue', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block auth_content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4>House Inventory System</h4>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('login') }}">
-                        <div class="mb-3">
-                            <label>Username</label>
-                            <input type="text" name="username" class="form-control" required autofocus>
-                        </div>
-                        <div class="mb-3">
-                            <label>Password</label>
-                            <input type="password" name="password" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Login</button>
-                    </form>
-                    <hr>
-                    <small class="text-muted">Default: admin / ChangeMe123!</small>
-                </div>
-            </div>
-        </div>
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+    }
+
+    /* ===== LEFT PANEL ===== */
+    .login-panel {
+      width: 420px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 48px 44px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 60px;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--display);
+      font-size: 16px;
+      color: #000;
+    }
+
+    .logo-text {
+      font-family: var(--display);
+      font-size: 24px;
+      letter-spacing: 3px;
+    }
+    .logo-text span { color: var(--accent); }
+
+    .login-heading {
+      font-family: var(--display);
+      font-size: 42px;
+      letter-spacing: 2px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .login-subtext {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 36px;
+    }
+
+    /* Flash messages */
+    .flash {
+      padding: 10px 14px;
+      border-left: 3px solid;
+      font-size: 13px;
+      border-radius: 3px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .flash-danger  { background: var(--danger-bg); border-color: var(--danger); color: #ff7b72; }
+    .flash-success { background: rgba(46,160,67,0.1); border-color: #2ea043; color: #56d364; }
+    .flash-info    { background: rgba(88,166,255,0.1); border-color: #58a6ff; color: #79b8ff; }
+
+    /* Form */
+    .form-group { margin-bottom: 18px; }
+
+    .form-label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--secondary);
+      margin-bottom: 7px;
+    }
+
+    .input-wrap { position: relative; }
+    .input-wrap i {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(232,160,32,0.1);
+    }
+
+    .form-control::placeholder { color: var(--muted); }
+
+    .remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--secondary);
+      cursor: pointer;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 14px; height: 14px;
+    }
+
+    .forgot-link {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 1px;
+      transition: color 0.15s;
+    }
+    .forgot-link:hover { color: var(--accent); }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      border: none;
+      border-radius: 3px;
+      color: #000;
+      font-family: var(--display);
+      font-size: 20px;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-login:hover { background: #f0b030; }
+    .btn-login:active { transform: scale(0.99); }
+
+    .login-footer {
+      margin-top: auto;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-info {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      line-height: 1.8;
+    }
+
+    /* ===== RIGHT VISUAL PANEL ===== */
+    .visual-panel {
+      flex: 1;
+      background: linear-gradient(135deg, #0d1117 0%, #111820 50%, #0f1a12 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .visual-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.3;
+    }
+
+    .visual-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .visual-stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .vis-stat {
+      background: rgba(22,27,34,0.8);
+      border: 1px solid var(--border);
+      padding: 16px;
+      text-align: left;
+      backdrop-filter: blur(4px);
+    }
+
+    .vis-stat-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .vis-stat-val {
+      font-family: var(--display);
+      font-size: 36px;
+      letter-spacing: 1px;
+    }
+
+    .vis-stat.c1 .vis-stat-val { color: var(--accent); }
+    .vis-stat.c2 .vis-stat-val { color: #58a6ff; }
+    .vis-stat.c3 .vis-stat-val { color: #2ea043; }
+    .vis-stat.c4 .vis-stat-val { color: #f85149; }
+
+    .visual-tagline {
+      font-family: var(--display);
+      font-size: 48px;
+      letter-spacing: 4px;
+      color: rgba(255,255,255,0.06);
+      line-height: 1;
+    }
+
+    .visual-sub {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-top: 12px;
+    }
+
+    /* Floating accent lines */
+    .accent-line {
+      position: absolute;
+      background: var(--accent);
+      opacity: 0.15;
+    }
+    .accent-line.h { height: 1px; }
+    .accent-line.v { width: 1px; }
+
+    @media (max-width: 768px) {
+      .visual-panel { display: none; }
+      .login-panel { width: 100%; padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-panel">
+    <div class="login-logo">
+      <div class="logo-icon">AP</div>
+      <div class="logo-text">ASSET<span>PRO</span></div>
     </div>
-</div>
-{% endblock %}
+
+    <h1 class="login-heading">SIGN IN</h1>
+    <p class="login-subtext">// ENTERPRISE ASSET MANAGEMENT SYSTEM</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }}">
+          <i class="fa-solid fa-{% if cat == 'danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+          {{ msg }}
+        </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-user"></i>
+          <input type="text" id="username" name="username" class="form-control"
+                 placeholder="Enter your username" required autofocus>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="password" name="password" class="form-control"
+                 placeholder="Enter your password" required>
+        </div>
+      </div>
+
+      <div class="remember-row">
+        <label class="checkbox-label">
+          <input type="checkbox" name="remember"> Keep me signed in
+        </label>
+        <a href="#" class="forgot-link">FORGOT PASSWORD?</a>
+      </div>
+
+      <button type="submit" class="btn-login">LOGIN</button>
+    </form>
+
+    <div class="login-footer">
+      <div class="footer-info">
+        ASSETPRO ERP v2.0<br>
+        © 2025 ALL RIGHTS RESERVED<br>
+        SECURE SESSION · MULTI-TENANT
+      </div>
+    </div>
+  </div>
+
+  <div class="visual-panel">
+    <div class="accent-line h" style="top:20%; left:5%; right:15%;"></div>
+    <div class="accent-line h" style="bottom:25%; left:20%; right:5%;"></div>
+    <div class="accent-line v" style="left:30%; top:10%; bottom:20%;"></div>
+
+    <div class="visual-content">
+      <div class="visual-stat-grid">
+        <div class="vis-stat c1">
+          <div class="vis-stat-label">Total Assets</div>
+          <div class="vis-stat-val">2,847</div>
+        </div>
+        <div class="vis-stat c2">
+          <div class="vis-stat-label">Active</div>
+          <div class="vis-stat-val">2,614</div>
+        </div>
+        <div class="vis-stat c3">
+          <div class="vis-stat-label">Maintained</div>
+          <div class="vis-stat-val">99%</div>
+        </div>
+        <div class="vis-stat c4">
+          <div class="vis-stat-label">Alerts</div>
+          <div class="vis-stat-val">12</div>
+        </div>
+      </div>
+      <div class="visual-tagline">TRACK<br>MANAGE<br>OPTIMIZE</div>
+      <div class="visual-sub">// FULL LIFECYCLE ASSET CONTROL</div>
+    </div>
+  </div>
+</body>
+</html>
