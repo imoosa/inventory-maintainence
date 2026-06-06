@@ -27,9 +27,7 @@
     <div class="page-subtitle">// SCHEDULED SERVICE TRACKING</div>
   </div>
   <div class="flex gap-8">
-    <a href="{{ url_for('add_maintenance') }}" class="btn btn-primary">
-      <i class="fa-solid fa-plus"></i> Schedule
-    </a>
+    
   </div>
 </div>
 
@@ -126,9 +124,7 @@
                 <i class="fa-solid fa-check"></i>
               </a>
               {% endif %}
-              <a href="{{ url_for('edit_maintenance', schedule_id=ms.id) }}" class="btn btn-outline btn-sm" title="Edit">
-                <i class="fa-solid fa-pen"></i>
-              </a>
+             
             </div>
           </td>
         </tr>
