@@ -1,0 +1,61 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-Mail
+Flask-Migrate
+Flask-WTF
+WTForms
+
+# Database
+PyMySQL
+SQLAlchemy
+mysqlclient
+
+# Authentication & Security
+email-validator
+python-dotenv
+werkzeug
+itsdangerous
+jinja2
+click
+bcrypt
+cryptography
+
+# QR Code & Image Processing
+qrcode
+Pillow
+
+# Excel & PDF Reports
+openpyxl
+reportlab
+pandas
+xlswriter
+
+# Charts & Visualization
+plotly
+chart.js
+
+# HTTP & APIs
+requests
+urllib3
+
+# Task Scheduling
+APScheduler
+croniter
+
+
+
+# Production Server
+gunicorn
+eventlet
+gevent
+
+# Redis (for caching & session management - optional but recommended)
+redis==5.0.0
+Flask-Session
+
+# Logging & Monitoring
+python-json-logger
+
+# Utilities
+python-magic
