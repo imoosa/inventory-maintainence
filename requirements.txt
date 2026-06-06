@@ -29,7 +29,7 @@ Pillow
 openpyxl
 reportlab
 pandas
-xlswriter
+XlsxWriter
 
 # Charts & Visualization
 plotly
