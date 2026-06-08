@@ -1,55 +1,416 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h2><i class="fas fa-bell"></i> Alerts & Notifications</h2>
-<hr>
+{% block title %}Alerts — AssetPro{% endblock %}
+{% block topbar_title %}Alerts{% endblock %}
 
-<div class="table-responsive">
-    <table class="table table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Type</th>
-                <th>Item</th>
-                <th>Message</th>
-                <th>Triggered At</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for alert in alerts %}
-            <tr class="{% if not alert.is_read %}table-danger{% endif %}">
-                <td>
-                    <span class="badge 
-                        {% if alert.alert_type == 'warranty' %}bg-info
-                        {% elif alert.alert_type == 'maintenance' %}bg-warning
-                        {% elif alert.alert_type == 'low_quantity' %}bg-danger
-                        {% else %}bg-secondary{% endif %}">
-                        {{ alert.alert_type|upper }}
-                    </span>
-                </td>
-                <td>{{ alert.item.name if alert.item else 'System' }}</td>
-                <td>{{ alert.message }}</td>
-                <td>{{ alert.triggered_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                <td>
-                    {% if alert.resolved_at %}
-                        <span class="badge bg-success">Resolved</span>
-                    {% elif alert.is_read %}
-                        <span class="badge bg-secondary">Read</span>
-                    {% else %}
-                        <span class="badge bg-danger">Unread</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if not alert.resolved_at %}
-                    <a href="{{ url_for('resolve_alert', id=alert.id) }}" class="btn btn-sm btn-success">
-                        <i class="fas fa-check"></i> Resolve
-                    </a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% block extra_head %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap');
+
+  /* ── Page header ── */
+  .alerts-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .alerts-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .alerts-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+  .alerts-count span {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover,
+  .filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0d1117;
+  }
+
+  /* ── Alert cards ── */
+  .alerts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .alert-card {
+    display: grid;
+    grid-template-columns: 4px 40px 1fr auto auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px 14px 0;
+    background: var(--card-bg, #161b22);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    transition: border-color 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .alert-card:hover {
+    border-color: var(--accent);
+    transform: translateX(2px);
+  }
+  .alert-card.unread {
+    background: rgba(232, 160, 32, 0.04);
+  }
+  .alert-card.resolved {
+    opacity: 0.5;
+  }
+
+  /* left accent bar */
+  .alert-accent-bar {
+    height: 100%;
+    width: 4px;
+    border-radius: 0;
+    align-self: stretch;
+    flex-shrink: 0;
+  }
+  .bar-warranty   { background: #58a6ff; }
+  .bar-maintenance{ background: #e8a020; }
+  .bar-low_stock,
+  .bar-low_quantity { background: #f85149; }
+  .bar-insurance  { background: #bc8cff; }
+  .bar-amc        { background: #2ea043; }
+  .bar-high_value { background: #ffa657; }
+  .bar-default    { background: #4a5568; }
+
+  /* icon circle */
+  .alert-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+  .icon-warranty   { background: rgba(88,166,255,0.12); color: #58a6ff; }
+  .icon-maintenance{ background: rgba(232,160,32,0.12); color: #e8a020; }
+  .icon-low_stock,
+  .icon-low_quantity { background: rgba(248,81,73,0.12); color: #f85149; }
+  .icon-insurance  { background: rgba(188,140,255,0.12); color: #bc8cff; }
+  .icon-amc        { background: rgba(46,160,67,0.12); color: #56d364; }
+  .icon-high_value { background: rgba(255,166,87,0.12); color: #ffa657; }
+  .icon-default    { background: rgba(100,110,125,0.12); color: #8b96a5; }
+
+  /* body */
+  .alert-body { min-width: 0; }
+  .alert-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+  }
+  .alert-message {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .alert-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .alert-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+  .tag-warranty   { background: rgba(88,166,255,0.12); color: #58a6ff; }
+  .tag-maintenance{ background: rgba(232,160,32,0.12); color: #e8a020; }
+  .tag-low_stock,
+  .tag-low_quantity { background: rgba(248,81,73,0.12); color: #f85149; }
+  .tag-insurance  { background: rgba(188,140,255,0.12); color: #bc8cff; }
+  .tag-amc        { background: rgba(46,160,67,0.12); color: #56d364; }
+  .tag-high_value { background: rgba(255,166,87,0.12); color: #ffa657; }
+  .tag-default    { background: rgba(100,110,125,0.12); color: #8b96a5; }
+
+  .alert-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  /* status badge */
+  .status-pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .pill-unread   { background: rgba(248,81,73,0.12); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+  .pill-read     { background: rgba(100,110,125,0.08); color: #8b96a5; border: 1px solid var(--border); }
+  .pill-resolved { background: rgba(46,160,67,0.12); color: #56d364; border: 1px solid rgba(46,160,67,0.3); }
+
+  /* unread dot */
+  .unread-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #f85149;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(248,81,73,0.6);
+  }
+
+  /* resolve form button */
+  .resolve-form { display: inline; }
+  .resolve-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(46,160,67,0.4);
+    background: rgba(46,160,67,0.08);
+    color: #56d364;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .resolve-btn:hover {
+    background: rgba(46,160,67,0.2);
+    border-color: #56d364;
+  }
+
+  /* action column */
+  .alert-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  /* empty state */
+  .empty-alerts {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--text-muted);
+  }
+  .empty-alerts i {
+    font-size: 32px;
+    color: #56d364;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .empty-alerts p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  /* summary strip */
+  .summary-strip {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .summary-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--card-bg, #161b22);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+  .summary-chip strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: inherit;
+  }
+
+  @media (max-width: 600px) {
+    .alert-card {
+      grid-template-columns: 4px 36px 1fr;
+      grid-template-rows: auto auto;
+    }
+    .alert-actions {
+      grid-column: 3;
+      justify-content: flex-start;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% set unread_count = alerts | selectattr('is_read', 'equalto', False) | selectattr('resolved_at', 'none') | list | length %}
+{% set resolved_count = alerts | selectattr('resolved_at') | list | length %}
+{% set total_count = alerts | length %}
+
+<!-- Header -->
+<div class="alerts-header">
+  <div>
+    <div class="alerts-title"><i class="fa-solid fa-bell"></i> &nbsp;Alerts &amp; Notifications</div>
+    <div class="alerts-count">{{ total_count }}<span>total alerts</span></div>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterAlerts('all', this)">All</button>
+    <button class="filter-btn" onclick="filterAlerts('unread', this)">Unread</button>
+    <button class="filter-btn" onclick="filterAlerts('resolved', this)">Resolved</button>
+    <button class="filter-btn" onclick="filterAlerts('warranty', this)">Warranty</button>
+    <button class="filter-btn" onclick="filterAlerts('maintenance', this)">Maint.</button>
+    <button class="filter-btn" onclick="filterAlerts('low_stock', this)">Stock</button>
+    <button class="filter-btn" onclick="filterAlerts('insurance', this)">Insurance</button>
+    <button class="filter-btn" onclick="filterAlerts('amc', this)">AMC</button>
+  </div>
 </div>
+
+<!-- Summary strip -->
+<div class="summary-strip">
+  <div class="summary-chip"><strong style="color:#f85149;">{{ unread_count }}</strong> unread</div>
+  <div class="summary-chip"><strong style="color:#56d364;">{{ resolved_count }}</strong> resolved</div>
+  <div class="summary-chip"><strong style="color:#e8a020;">{{ total_count - resolved_count - unread_count }}</strong> read / open</div>
+</div>
+
+<!-- Alert list -->
+<div class="alerts-list" id="alertsList">
+  {% for alert in alerts %}
+  {% set atype = alert.alert_type | lower %}
+  <div class="alert-card {% if not alert.is_read and not alert.resolved_at %}unread{% endif %} {% if alert.resolved_at %}resolved{% endif %}"
+       data-type="{{ atype }}"
+       data-status="{% if alert.resolved_at %}resolved{% elif alert.is_read %}read{% else %}unread{% endif %}">
+
+    <!-- Accent bar -->
+    <div class="alert-accent-bar bar-{{ atype if atype in ['warranty','maintenance','low_stock','insurance','amc','high_value'] else 'default' }}"></div>
+
+    <!-- Icon -->
+    <div class="alert-icon-wrap icon-{{ atype if atype in ['warranty','maintenance','low_stock','insurance','amc','high_value'] else 'default' }}">
+      <i class="fa-solid fa-{% if atype == 'warranty' %}shield-halved{% elif atype == 'maintenance' %}screwdriver-wrench{% elif atype in ['low_stock','low_quantity'] %}box-open{% elif atype == 'insurance' %}file-shield{% elif atype == 'amc' %}rotate{% elif atype == 'high_value' %}star{% else %}bell{% endif %}"></i>
+    </div>
+
+    <!-- Body -->
+    <div class="alert-body">
+      <div class="alert-name">{{ alert.item.name if alert.item else 'System' }}</div>
+      <div class="alert-message">{{ alert.message }}</div>
+      <div class="alert-meta-row">
+        <span class="alert-tag tag-{{ atype if atype in ['warranty','maintenance','low_stock','insurance','amc','high_value'] else 'default' }}">
+          {{ atype | upper | replace('_', ' ') }}
+        </span>
+        <span class="alert-time">{{ alert.triggered_at.strftime('%d %b %Y · %H:%M') }}</span>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div>
+      {% if alert.resolved_at %}
+        <span class="status-pill pill-resolved">Resolved</span>
+      {% elif alert.is_read %}
+        <span class="status-pill pill-read">Read</span>
+      {% else %}
+        <span class="status-pill pill-unread">Unread</span>
+      {% endif %}
+    </div>
+
+    <!-- Actions -->
+    <div class="alert-actions">
+      {% if not alert.resolved_at %}
+        {# FIX: use POST form, not GET anchor — resolves 405 error #}
+        <form class="resolve-form" method="POST" action="{{ url_for('resolve_alert', id=alert.id) }}">
+          <button type="submit" class="resolve-btn">
+            <i class="fa-solid fa-check"></i> Resolve
+          </button>
+        </form>
+      {% endif %}
+      {% if not alert.is_read and not alert.resolved_at %}
+        <div class="unread-dot"></div>
+      {% endif %}
+    </div>
+
+  </div>
+  {% else %}
+  <div class="empty-alerts">
+    <i class="fa-solid fa-check-circle"></i>
+    <p>No alerts — all clear</p>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function filterAlerts(type, btn) {
+    // Update button states
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const cards = document.querySelectorAll('.alert-card');
+    cards.forEach(card => {
+      let show = false;
+      if (type === 'all') {
+        show = true;
+      } else if (['unread', 'read', 'resolved'].includes(type)) {
+        show = card.dataset.status === type;
+      } else {
+        // alert type filter
+        show = card.dataset.type === type || card.dataset.type === type.replace('-', '_');
+      }
+      card.style.display = show ? '' : 'none';
+    });
+  }
+</script>
 {% endblock %}

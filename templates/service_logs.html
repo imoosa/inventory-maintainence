@@ -1,35 +1,409 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2><i class="fas fa-clipboard-list"></i> Service Logs</h2>
-<hr>
 
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>Item</th>
-                <th>Service Date</th>
-                <th>Performed By</th>
-                <th>Actions</th>
-                <th>Parts Used</th>
-                <th>Cost</th>
-                <th>Next Service Due</th>
-            </tr>
+<style>
+  /* ── Page Variables ─────────────────────────── */
+  :root {
+    --sl-bg:        #0f1117;
+    --sl-surface:   #1a1d27;
+    --sl-card:      #21253a;
+    --sl-border:    rgba(255,255,255,0.07);
+    --sl-accent:    #6c8aff;
+    --sl-accent2:   #a78bfa;
+    --sl-green:     #34d399;
+    --sl-amber:     #fbbf24;
+    --sl-red:       #f87171;
+    --sl-text:      #e2e8f0;
+    --sl-muted:     #64748b;
+    --sl-radius:    14px;
+  }
+
+  .sl-wrap { font-family: 'Segoe UI', system-ui, sans-serif; color: var(--sl-text); }
+
+  /* ── Hero header ────────────────────────────── */
+  .sl-hero {
+    background: linear-gradient(135deg, #1e2340 0%, #111827 100%);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--sl-radius);
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .sl-hero-left h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+    letter-spacing: -0.4px;
+  }
+  .sl-hero-left h2 i { color: var(--sl-accent); margin-right: 10px; }
+  .sl-hero-left p { color: var(--sl-muted); margin: 0; font-size: 0.9rem; }
+
+  /* Stat pills */
+  .sl-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+  .sl-stat {
+    background: var(--sl-card);
+    border: 1px solid var(--sl-border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 110px;
+  }
+  .sl-stat-val { font-size: 1.4rem; font-weight: 700; line-height: 1; }
+  .sl-stat-lbl { font-size: 0.72rem; color: var(--sl-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .sl-stat-val.accent  { color: var(--sl-accent); }
+  .sl-stat-val.green   { color: var(--sl-green); }
+  .sl-stat-val.amber   { color: var(--sl-amber); }
+
+  /* ── Filter bar ─────────────────────────────── */
+  .sl-filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .sl-filters input,
+  .sl-filters select {
+    background: var(--sl-surface);
+    border: 1px solid var(--sl-border);
+    color: var(--sl-text);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .sl-filters input:focus,
+  .sl-filters select:focus { border-color: var(--sl-accent); }
+  .sl-filters input::placeholder { color: var(--sl-muted); }
+
+  /* ── Table card ─────────────────────────────── */
+  .sl-table-card {
+    background: var(--sl-surface);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--sl-radius);
+    overflow: hidden;
+  }
+
+  .sl-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+
+  .sl-table thead tr {
+    background: linear-gradient(90deg, #1e2340, #1a1d27);
+    border-bottom: 1px solid var(--sl-border);
+  }
+  .sl-table thead th {
+    padding: 14px 16px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--sl-muted);
+    white-space: nowrap;
+  }
+  .sl-table thead th:first-child { padding-left: 20px; }
+
+  .sl-table tbody tr {
+    border-bottom: 1px solid var(--sl-border);
+    transition: background .15s;
+  }
+  .sl-table tbody tr:last-child { border-bottom: none; }
+  .sl-table tbody tr:hover { background: rgba(108,138,255,0.05); }
+
+  .sl-table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    color: var(--sl-text);
+  }
+  .sl-table td:first-child { padding-left: 20px; }
+
+  /* Asset name cell */
+  .sl-asset-name {
+    font-weight: 600;
+    color: var(--sl-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sl-asset-name .sl-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--sl-accent);
+    flex-shrink: 0;
+  }
+
+  /* Date badge */
+  .sl-date-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(108,138,255,0.12);
+    color: #93a8ff;
+    border-radius: 6px;
+    padding: 3px 9px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* Cost badge */
+  .sl-cost {
+    font-weight: 700;
+    color: var(--sl-green);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Next service due */
+  .sl-due-ok   { color: var(--sl-green); font-size: 0.82rem; }
+  .sl-due-soon { color: var(--sl-amber); font-size: 0.82rem; }
+  .sl-due-over { color: var(--sl-red);   font-size: 0.82rem; }
+  .sl-due-none { color: var(--sl-muted); font-size: 0.82rem; }
+
+  /* Actions truncation with expand */
+  .sl-actions-text {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #94a3b8;
+    font-size: 0.83rem;
+    cursor: pointer;
+    transition: color .15s;
+  }
+  .sl-actions-text:hover { color: var(--sl-text); white-space: normal; overflow: visible; }
+
+  /* Performed by tag */
+  .sl-person {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+  }
+  .sl-person-avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sl-accent), var(--sl-accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+
+  /* Empty state */
+  .sl-empty {
+    padding: 72px 24px;
+    text-align: center;
+    color: var(--sl-muted);
+  }
+  .sl-empty i { font-size: 3rem; margin-bottom: 16px; opacity: .3; display: block; }
+  .sl-empty h4 { font-size: 1.1rem; color: #94a3b8; margin-bottom: 8px; }
+  .sl-empty p  { font-size: 0.88rem; max-width: 340px; margin: 0 auto; }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .sl-hero { padding: 20px; }
+    .sl-table thead th:nth-child(5),
+    .sl-table td:nth-child(5) { display: none; }  /* hide Parts Used */
+  }
+</style>
+
+<div class="sl-wrap">
+
+  {# ── Hero ─────────────────────────────────── #}
+  <div class="sl-hero">
+    <div class="sl-hero-left">
+      <h2><i class="fas fa-clipboard-list"></i> Service Logs</h2>
+      <p>Complete maintenance and service history across all assets</p>
+    </div>
+    <div class="sl-stats">
+      <div class="sl-stat">
+        <div class="sl-stat-val accent">{{ logs|length }}</div>
+        <div class="sl-stat-lbl">Total Logs</div>
+      </div>
+      <div class="sl-stat">
+        {% set total_cost = logs | selectattr('cost') | sum(attribute='cost') %}
+        <div class="sl-stat-val green">₹{{ "{:,.0f}".format(total_cost) }}</div>
+        <div class="sl-stat-lbl">Total Spent</div>
+      </div>
+      <div class="sl-stat">
+        {% set this_month = namespace(count=0) %}
+        {% for log in logs %}
+          {% if log.service_date.month == now.month and log.service_date.year == now.year %}
+            {% set this_month.count = this_month.count + 1 %}
+          {% endif %}
+        {% endfor %}
+        <div class="sl-stat-val amber">{{ this_month.count }}</div>
+        <div class="sl-stat-lbl">This Month</div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Filters ──────────────────────────────── #}
+  <div class="sl-filters">
+    <input type="text" id="sl-search" placeholder="🔍  Search asset, person, action…" style="min-width:240px;">
+    <select id="sl-month-filter">
+      <option value="">All Months</option>
+    </select>
+  </div>
+
+  {# ── Table ────────────────────────────────── #}
+  <div class="sl-table-card">
+    {% if logs %}
+    <div style="overflow-x:auto;">
+      <table class="sl-table" id="sl-main-table">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Service Date</th>
+            <th>Performed By</th>
+            <th>Actions</th>
+            <th>Parts Used</th>
+            <th>Cost</th>
+            <th>Next Due</th>
+          </tr>
         </thead>
-        <tbody>
-            {% for log in logs %}
-            <tr>
-                <td>{{ log.item.name }}</td>
-                <td>{{ log.service_date.strftime('%Y-%m-%d') }}</td>
-                <td>{{ log.performed_by }}</td>
-                <td>{{ log.actions[:50] }}{% if log.actions|length > 50 %}...{% endif %}</td>
-                <td>{{ log.parts_used[:50] if log.parts_used else '-' }}</td>
-                <td>${{ "%.2f"|format(log.cost) }}</td>
-                <td>{{ log.next_service_due.strftime('%Y-%m-%d') if log.next_service_due else '-' }}</td>
-            </tr>
-            {% endfor %}
+        <tbody id="sl-tbody">
+          {% for log in logs %}
+          {% set days_until = ((log.next_service_due - now).days) if log.next_service_due else None %}
+          <tr data-search="{{ (log.item.name ~ ' ' ~ (log.performed_by or '') ~ ' ' ~ (log.actions or ''))|lower }}"
+              data-month="{{ log.service_date.strftime('%Y-%m') }}">
+
+            {# Asset #}
+            <td>
+              <div class="sl-asset-name">
+                <span class="sl-dot"></span>
+                <a href="{{ url_for('view_asset', item_id=log.item.id) }}"
+                   style="color:inherit;text-decoration:none;">
+                  {{ log.item.name }}
+                </a>
+              </div>
+              {% if log.item.asset_code %}
+              <div style="font-size:0.72rem;color:var(--sl-muted);margin-top:2px;padding-left:16px;">
+                {{ log.item.asset_code }}
+              </div>
+              {% endif %}
+            </td>
+
+            {# Date #}
+            <td>
+              <span class="sl-date-badge">
+                <i class="fas fa-calendar-check" style="font-size:0.7rem;"></i>
+                {{ log.service_date.strftime('%d %b %Y') }}
+              </span>
+            </td>
+
+            {# Person #}
+            <td>
+              {% if log.performed_by %}
+              <div class="sl-person">
+                <div class="sl-person-avatar">{{ log.performed_by[0]|upper }}</div>
+                {{ log.performed_by }}
+              </div>
+              {% else %}
+              <span style="color:var(--sl-muted);">—</span>
+              {% endif %}
+            </td>
+
+            {# Actions #}
+            <td>
+              {% if log.actions %}
+              <div class="sl-actions-text" title="{{ log.actions }}">{{ log.actions }}</div>
+              {% else %}
+              <span style="color:var(--sl-muted);">—</span>
+              {% endif %}
+            </td>
+
+            {# Parts #}
+            <td style="color:#94a3b8;font-size:0.83rem;">
+              {{ log.parts_used if log.parts_used else '—' }}
+            </td>
+
+            {# Cost #}
+            <td>
+              {% if log.cost %}
+              <span class="sl-cost">₹{{ "{:,.0f}".format(log.cost) }}</span>
+              {% else %}
+              <span style="color:var(--sl-muted);">—</span>
+              {% endif %}
+            </td>
+
+            {# Next Due #}
+            <td>
+              {% if log.next_service_due %}
+                {% if days_until < 0 %}
+                  <span class="sl-due-over"><i class="fas fa-exclamation-circle"></i> Overdue {{ (-days_until) }}d</span>
+                {% elif days_until <= 30 %}
+                  <span class="sl-due-soon"><i class="fas fa-clock"></i> {{ log.next_service_due.strftime('%d %b %Y') }}</span>
+                {% else %}
+                  <span class="sl-due-ok"><i class="fas fa-check-circle"></i> {{ log.next_service_due.strftime('%d %b %Y') }}</span>
+                {% endif %}
+              {% else %}
+                <span class="sl-due-none">—</span>
+              {% endif %}
+            </td>
+
+          </tr>
+          {% endfor %}
         </tbody>
-    </table>
+      </table>
+    </div>
+
+    {# Empty-after-filter message #}
+    <div id="sl-no-results" style="display:none;" class="sl-empty">
+      <i class="fas fa-search"></i>
+      <h4>No results found</h4>
+      <p>Try a different search term or clear the filters.</p>
+    </div>
+
+    {% else %}
+    {# True empty state — no logs at all #}
+    <div class="sl-empty">
+      <i class="fas fa-clipboard-list"></i>
+      <h4>No service logs yet</h4>
+      <p>Service logs are added from individual asset pages. Open any asset and use the <strong>Add Service Log</strong> form to record the first entry.</p>
+    </div>
+    {% endif %}
+  </div>
+
 </div>
+
+<script>
+(function () {
+  const search   = document.getElementById('sl-search');
+  const monthSel = document.getElementById('sl-month-filter');
+  const rows     = document.querySelectorAll('#sl-tbody tr');
+  const noRes    = document.getElementById('sl-no-results');
+
+  /* Populate month dropdown from unique months in data */
+  const months = [...new Set([...rows].map(r => r.dataset.month))].sort().reverse();
+  months.forEach(m => {
+    const [yr, mo] = m.split('-');
+    const label = new Date(yr, mo - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = label;
+    monthSel.appendChild(opt);
+  });
+
+  function filter() {
+    const q  = (search.value || '').toLowerCase();
+    const mo = monthSel.value;
+    let visible = 0;
+    rows.forEach(row => {
+      const matchSearch = !q  || row.dataset.search.includes(q);
+      const matchMonth  = !mo || row.dataset.month === mo;
+      const show = matchSearch && matchMonth;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    if (noRes) noRes.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  if (search)   search.addEventListener('input', filter);
+  if (monthSel) monthSel.addEventListener('change', filter);
+})();
+</script>
+
 {% endblock %}

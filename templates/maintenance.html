@@ -135,7 +135,7 @@
           </td>
           <td>
             {% if ms.status != 'completed' %}
-            <a href="{{ url_for('complete_maintenance', schedule_id=ms.id) }}" class="btn btn-success btn-sm" title="Mark Complete">
+            <a href="{{ url_for('complete_maintenance', id=ms.id) }}" class="btn btn-success btn-sm" title="Mark Complete">
               <i class="fa-solid fa-check"></i>
             </a>
             {% endif %}
@@ -199,7 +199,7 @@
 
     {% if ms.status != 'completed' %}
     <div class="m-card-actions">
-      <a href="{{ url_for('complete_maintenance', schedule_id=ms.id) }}" class="btn btn-success btn-sm">
+      <a href="{{ url_for('complete_maintenance', id=ms.id) }}" class="btn btn-success btn-sm">
         <i class="fa-solid fa-check"></i> Mark Complete
       </a>
     </div>

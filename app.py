@@ -11,15 +11,35 @@ import json
 import qrcode
 from io import BytesIO
 import base64
+import pymysql
+
+# PyMySQL as MySQLdb drop-in
+pymysql.install_as_MySQLdb()
 
 # Load environment variables
 load_dotenv()
 
+# Build MySQL URI from individual .env vars (preferred) or fall back to DATABASE_URL
+def _build_db_uri():
+    db_user     = os.getenv('DB_USER', 'root')
+    db_password = os.getenv('DB_PASSWORD', '')
+    db_host     = os.getenv('DB_HOST', 'localhost')
+    db_port     = os.getenv('DB_PORT', '3306')
+    db_name     = os.getenv('DB_NAME', 'asset')
+    return (
+        f"mysql+pymysql://{db_user}:{db_password}"
+        f"@{db_host}:{db_port}/{db_name}?charset=utf8mb4"
+    )
+
 # Initialize app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-key-change-this')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///inventory.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', _build_db_uri())
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_recycle': 280,      # recycle before MySQL's 5-min wait_timeout
+    'pool_pre_ping': True,    # drop stale connections automatically
+}
 
 # File upload config
 app.config['UPLOAD_FOLDER_PHOTOS'] = 'static/uploads/photos'
@@ -206,13 +226,6 @@ def check_all_alerts():
             setting = settings_dict.get('amc', AlertSetting(days_before=30))
             if setting.is_active and 0 <= days_left <= setting.days_before:
                 _create_alert(item, 'amc', f"AMC expires in {days_left} day(s) for {item.name}")
-
-        # --- Low stock ---
-        if item.reorder_level and item.quantity <= item.reorder_level:
-            setting = settings_dict.get('low_stock', AlertSetting(days_before=0))
-            if setting.is_active:
-                _create_alert(item, 'low_stock',
-                              f"Low stock: only {item.quantity} unit(s) left (reorder at {item.reorder_level})")
 
         # --- High value item check (NEW) ---
         threshold = app.config['HIGH_VALUE_THRESHOLD']
@@ -513,11 +526,16 @@ def dashboard():
             monthly_costs.append({'month': month_start.strftime('%b %Y'), 'cost': float(cost)})
 
         # Category-wise value
-        category_values = db.session.query(
+        _cat_rows = db.session.query(
             Category.name, func.sum(InventoryItem.current_value)
         ).join(InventoryItem, isouter=True).filter(
             InventoryItem.company_id == company_id
         ).group_by(Category.id).all()
+
+        category_values = [
+            {'category': row[0], 'value': float(row[1] or 0)}
+            for row in _cat_rows
+        ]
 
         # Recent alerts
         recent_alerts = Alert.query.join(InventoryItem).filter(
@@ -1631,11 +1649,10 @@ def add_maintenance_template():
 @app.route('/service-logs')
 @login_required
 def service_logs():
-    # FIX: filter by company — no cross-tenant data leak
     logs = ServiceLog.query.join(InventoryItem).filter(
         InventoryItem.company_id == current_user.company_id
     ).order_by(ServiceLog.service_date.desc()).all()
-    return render_template('service_logs.html', logs=logs)
+    return render_template('service_logs.html', logs=logs, now=datetime.utcnow())
 
 
 @app.route('/service-log/add/<int:item_id>', methods=['POST'])
@@ -1673,6 +1690,9 @@ def add_service_log(item_id):
 @app.route('/alerts')
 @login_required
 def alerts():
+    # Run check so alerts are always fresh when you open the page
+    check_all_alerts()
+
     alert_list = Alert.query.join(InventoryItem).filter(
         InventoryItem.company_id == current_user.company_id
     ).order_by(Alert.triggered_at.desc()).all()

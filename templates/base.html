@@ -862,9 +862,7 @@
       <a href="{{ url_for('scan_barcode') }}" class="nav-item {% if 'barcode' in request.endpoint %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-qrcode"></i> QR Scanner
       </a>
-      <a href="{{ url_for('reports') }}" class="nav-item {% if request.endpoint == 'reports' %}active{% endif %}" onclick="closeSidebar()">
-        <i class="fa-solid fa-chart-bar"></i> Reports
-      </a>
+      
 
       {% if current_user.role == 'admin' %}
       <div class="nav-section-label">Admin</div>
