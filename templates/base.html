@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0c0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>{% block title %}AssetPro ERP{% endblock %}</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,6 +40,11 @@
       --mono: 'IBM Plex Mono', monospace;
       --sans: 'IBM Plex Sans', sans-serif;
       --display: 'Bebas Neue', sans-serif;
+      /* Safe area insets for notched phones */
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+      --safe-left: env(safe-area-inset-left);
+      --safe-right: env(safe-area-inset-right);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,6 +55,9 @@
       color: var(--text-primary);
       min-height: 100vh;
       display: flex;
+      /* Prevent content from going under notch */
+      padding-left: var(--safe-left);
+      padding-right: var(--safe-right);
     }
 
     /* ===== SIDEBAR ===== */
@@ -61,6 +72,7 @@
       height: 100vh;
       z-index: 100;
       transition: transform 0.25s ease;
+      overflow-y: auto;
     }
 
     .sidebar-logo {
@@ -70,6 +82,7 @@
       align-items: center;
       gap: 10px;
       border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
 
     .sidebar-logo .logo-icon {
@@ -95,6 +108,7 @@
       flex: 1;
       overflow-y: auto;
       padding: 16px 0;
+      -webkit-overflow-scrolling: touch;
     }
 
     .nav-section-label {
@@ -110,7 +124,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 9px 20px;
+      padding: 11px 20px; /* slightly taller tap target on mobile */
       color: var(--text-secondary);
       text-decoration: none;
       font-size: 13px;
@@ -118,9 +132,10 @@
       border-left: 2px solid transparent;
       transition: all 0.15s;
       position: relative;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .nav-item:hover {
+    .nav-item:hover, .nav-item:active {
       color: var(--text-primary);
       background: rgba(255,255,255,0.03);
     }
@@ -155,6 +170,9 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-shrink: 0;
+      /* Keep above bottom safe area on iOS */
+      padding-bottom: calc(12px + var(--safe-bottom));
     }
 
     .user-avatar {
@@ -189,11 +207,12 @@
     .sidebar-logout {
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 13px;
-      padding: 4px;
+      font-size: 18px; /* larger tap target */
+      padding: 8px;
       transition: color 0.15s;
+      -webkit-tap-highlight-color: transparent;
     }
-    .sidebar-logout:hover { color: var(--danger); }
+    .sidebar-logout:hover, .sidebar-logout:active { color: var(--danger); }
 
     /* ===== MAIN LAYOUT ===== */
     .main-wrap {
@@ -202,6 +221,7 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      min-width: 0; /* prevent overflow */
     }
 
     /* ===== TOP BAR ===== */
@@ -211,8 +231,8 @@
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      padding: 0 24px;
-      gap: 16px;
+      padding: 0 16px;
+      gap: 10px;
       position: sticky;
       top: 0;
       z-index: 50;
@@ -224,29 +244,43 @@
       letter-spacing: 2px;
       color: var(--text-primary);
       flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Hide text labels on topbar buttons on small screens — keep icons only */
+    .topbar-actions .btn-label { display: inline; }
 
     .menu-toggle {
       display: none;
       background: none;
       border: none;
       color: var(--text-secondary);
-      font-size: 18px;
+      font-size: 20px;
       cursor: pointer;
-      padding: 4px 8px;
+      padding: 8px;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
     /* ===== CONTENT ===== */
     .content {
-      padding: 24px;
+      padding: 20px;
       flex: 1;
     }
 
     /* ===== FLASH MESSAGES ===== */
     .flash-container {
-      padding: 0 24px;
+      padding: 12px 16px 0;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -280,7 +314,9 @@
       color: inherit;
       cursor: pointer;
       opacity: 0.6;
-      font-size: 11px;
+      font-size: 14px;
+      padding: 4px;
+      flex-shrink: 0;
     }
 
     /* ===== CARDS ===== */
@@ -291,11 +327,12 @@
     }
 
     .card-header {
-      padding: 14px 18px;
+      padding: 14px 16px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     .card-title {
@@ -307,14 +344,14 @@
       font-weight: 500;
     }
 
-    .card-body { padding: 18px; }
+    .card-body { padding: 16px; }
 
     /* ===== BUTTONS ===== */
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 14px;
+      padding: 8px 14px;
       font-family: var(--sans);
       font-size: 12px;
       font-weight: 500;
@@ -324,6 +361,8 @@
       text-decoration: none;
       transition: all 0.15s;
       white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation; /* faster tap response */
     }
 
     .btn-primary {
@@ -332,21 +371,21 @@
       color: #000;
       font-weight: 600;
     }
-    .btn-primary:hover { background: #f0b030; border-color: #f0b030; }
+    .btn-primary:hover, .btn-primary:active { background: #f0b030; border-color: #f0b030; }
 
     .btn-outline {
       background: transparent;
       border-color: var(--border-bright);
       color: var(--text-secondary);
     }
-    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-outline:hover, .btn-outline:active { border-color: var(--accent); color: var(--accent); }
 
     .btn-danger {
       background: var(--danger-bg);
       border-color: var(--danger);
       color: var(--danger);
     }
-    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-danger:hover, .btn-danger:active { background: var(--danger); color: #fff; }
 
     .btn-success {
       background: var(--success-bg);
@@ -354,8 +393,11 @@
       color: var(--success);
     }
 
-    .btn-sm { padding: 4px 10px; font-size: 11px; }
-    .btn-lg { padding: 10px 20px; font-size: 14px; }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+    .btn-lg { padding: 12px 20px; font-size: 14px; }
+
+    /* Full-width button helper for mobile */
+    .btn-block { width: 100%; justify-content: center; }
 
     /* ===== FORMS ===== */
     .form-group { margin-bottom: 16px; }
@@ -372,21 +414,29 @@
 
     .form-control {
       width: 100%;
-      padding: 8px 12px;
+      padding: 10px 12px; /* taller for touch */
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       color: var(--text-primary);
       font-family: var(--sans);
-      font-size: 13px;
+      font-size: 14px; /* avoid iOS zoom (must be ≥16px native or 14px+ scaled) */
       outline: none;
       transition: border-color 0.15s;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     .form-control:focus { border-color: var(--accent); }
     .form-control::placeholder { color: var(--text-muted); }
 
-    select.form-control { cursor: pointer; }
+    select.form-control {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23505a68' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
 
     textarea.form-control { resize: vertical; min-height: 80px; }
 
@@ -397,8 +447,12 @@
       margin-top: 4px;
     }
 
+    /* Form grid — stacks on mobile */
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
     /* ===== TABLES ===== */
-    .table-wrap { overflow-x: auto; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
     table {
       width: 100%;
@@ -435,6 +489,51 @@
     tbody td a { color: var(--text-primary); text-decoration: none; }
     tbody td a:hover { color: var(--accent); }
 
+    /* ===== MOBILE CARD LIST (replaces table on small screens) ===== */
+    .mobile-card-list { display: none; }
+
+    .m-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .m-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .m-card-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .m-card-field { display: flex; flex-direction: column; gap: 2px; }
+    .m-card-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .m-card-value { color: var(--text-secondary); font-size: 12px; }
+
+    .m-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .m-card-actions .btn { flex: 1; justify-content: center; }
+
     /* ===== BADGES ===== */
     .badge {
       display: inline-flex;
@@ -459,18 +558,18 @@
     .badge-manager   { color: var(--info); border-color: var(--info); background: var(--info-bg); }
     .badge-user      { color: var(--text-muted); border-color: var(--border); background: transparent; }
 
-    /* ===== STATS ===== */
+    /* ===== STATS GRID ===== */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
     .stat-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      padding: 16px 18px;
+      padding: 14px 16px;
       border-radius: var(--radius);
       position: relative;
       overflow: hidden;
@@ -494,12 +593,12 @@
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--text-muted);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .stat-value {
       font-family: var(--display);
-      font-size: 32px;
+      font-size: 28px;
       letter-spacing: 1px;
       line-height: 1;
     }
@@ -521,14 +620,14 @@
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 20px;
-      gap: 16px;
+      margin-bottom: 16px;
+      gap: 12px;
       flex-wrap: wrap;
     }
 
     .page-title {
       font-family: var(--display);
-      font-size: 28px;
+      font-size: 26px;
       letter-spacing: 2px;
       line-height: 1;
     }
@@ -558,7 +657,7 @@
     .search-input-wrap {
       position: relative;
       flex: 1;
-      min-width: 200px;
+      min-width: 160px;
     }
 
     .search-input-wrap i {
@@ -575,7 +674,7 @@
     /* ===== EMPTY STATE ===== */
     .empty-state {
       text-align: center;
-      padding: 48px 24px;
+      padding: 40px 20px;
       color: var(--text-muted);
     }
 
@@ -609,9 +708,9 @@
     .mt-20 { margin-top: 20px; }
 
     /* ===== PAGINATION ===== */
-    .pagination { display: flex; gap: 4px; align-items: center; justify-content: center; padding: 16px 0; }
+    .pagination { display: flex; gap: 4px; align-items: center; justify-content: center; padding: 16px 0; flex-wrap: wrap; }
     .pagination a, .pagination span {
-      padding: 5px 10px;
+      padding: 7px 12px;
       font-family: var(--mono);
       font-size: 11px;
       border-radius: var(--radius);
@@ -622,25 +721,104 @@
     .pagination a:hover { border-color: var(--accent); color: var(--accent); }
     .pagination .active { background: var(--accent); color: #000; border-color: var(--accent); }
 
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 900px) {
-      .sidebar { transform: translateX(-100%); }
-      .sidebar.open { transform: translateX(0); }
-      .main-wrap { margin-left: 0; }
-      .menu-toggle { display: block; }
-      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-      .content { padding: 16px; }
-    }
-
     /* ===== OVERLAY ===== */
     .sidebar-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
       z-index: 99;
+      backdrop-filter: blur(2px);
     }
     .sidebar-overlay.show { display: block; }
+
+    /* ===== BOTTOM NAV (mobile only) ===== */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(56px + var(--safe-bottom));
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      z-index: 80;
+      padding-bottom: var(--safe-bottom);
+    }
+
+    .bottom-nav-inner {
+      display: flex;
+      height: 56px;
+      align-items: stretch;
+    }
+
+    .bottom-nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-family: var(--mono);
+      letter-spacing: 0.5px;
+      transition: color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .bottom-nav-item i { font-size: 18px; }
+    .bottom-nav-item.active { color: var(--accent); }
+    .bottom-nav-item:active { color: var(--accent); }
+
+    /* ===== RESPONSIVE — TABLET (max 900px) ===== */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+      .main-wrap { margin-left: 0; }
+      .menu-toggle { display: block; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .content { padding: 14px; }
+      .topbar { padding: 0 12px; }
+    }
+
+    /* ===== RESPONSIVE — MOBILE (max 600px) ===== */
+    @media (max-width: 600px) {
+      /* Show bottom nav, hide topbar buttons text */
+      .bottom-nav { display: block; }
+      /* Add padding so content doesn't go behind bottom nav */
+      .content { padding-bottom: calc(70px + var(--safe-bottom)); }
+
+      /* Topbar: only show menu toggle + title + bell */
+      .topbar-actions .btn:not(.topbar-bell) { display: none; }
+      .topbar-actions .topbar-bell { display: inline-flex; }
+
+      .page-header { flex-direction: column; gap: 10px; }
+      .page-header > .flex, .page-header > div:last-child { width: 100%; }
+      .page-header .btn { flex: 1; justify-content: center; }
+
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .stat-value { font-size: 24px; }
+      .stat-sub { display: none; } /* save space */
+
+      .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+
+      .filter-bar .search-bar { flex-direction: column; }
+      .filter-bar .search-bar > * { width: 100%; }
+      .filter-bar .search-bar select { width: 100% !important; }
+
+      /* Desktop table hidden, mobile cards shown */
+      .desktop-table { display: none; }
+      .mobile-card-list { display: block; }
+
+      .card-header { padding: 12px 14px; }
+      .card-body { padding: 12px 14px; }
+    }
+
+    /* ===== RESPONSIVE — VERY SMALL (max 380px) ===== */
+    @media (max-width: 380px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .page-title { font-size: 22px; }
+    }
   </style>
   {% block extra_head %}{% endblock %}
 </head>
@@ -654,48 +832,46 @@
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section-label">Main</div>
-      <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+      <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-gauge-high"></i> Dashboard
       </a>
-      <a href="{{ url_for('inventory') }}" class="nav-item {% if 'inventory' in request.endpoint or 'item' in request.endpoint %}active{% endif %}">
+      <a href="{{ url_for('inventory') }}" class="nav-item {% if 'inventory' in request.endpoint or 'item' in request.endpoint %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-boxes-stacked"></i> Inventory
       </a>
-      <a href="{{ url_for('alerts') }}" class="nav-item {% if request.endpoint == 'alerts' %}active{% endif %}">
+      <a href="{{ url_for('alerts') }}" class="nav-item {% if request.endpoint == 'alerts' %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-bell"></i> Alerts
-        {% set unread_count = namespace(val=0) %}
-        {# unread badge rendered server-side via context processor if available #}
       </a>
 
       <div class="nav-section-label">Maintenance</div>
-      <a href="{{ url_for('maintenance') }}" class="nav-item {% if 'maintenance' in request.endpoint %}active{% endif %}">
+      <a href="{{ url_for('maintenance') }}" class="nav-item {% if 'maintenance' in request.endpoint %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-screwdriver-wrench"></i> Schedules
       </a>
-      <a href="{{ url_for('service_logs') }}" class="nav-item {% if 'service_log' in request.endpoint %}active{% endif %}">
+      <a href="{{ url_for('service_logs') }}" class="nav-item {% if 'service_log' in request.endpoint %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-clipboard-list"></i> Service Logs
       </a>
 
       <div class="nav-section-label">Masters</div>
-      <a href="{{ url_for('suppliers') }}" class="nav-item {% if 'supplier' in request.endpoint %}active{% endif %}">
+      <a href="{{ url_for('suppliers') }}" class="nav-item {% if 'supplier' in request.endpoint %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-truck"></i> Suppliers
       </a>
-      <a href="{{ url_for('categories') }}" class="nav-item {% if 'categor' in request.endpoint %}active{% endif %}">
+      <a href="{{ url_for('categories') }}" class="nav-item {% if 'categor' in request.endpoint %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-tags"></i> Categories
       </a>
 
       <div class="nav-section-label">Tools</div>
-      <a href="{{ url_for('scan_barcode') }}" class="nav-item {% if 'barcode' in request.endpoint %}active{% endif %}">
+      <a href="{{ url_for('scan_barcode') }}" class="nav-item {% if 'barcode' in request.endpoint %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-qrcode"></i> QR Scanner
       </a>
-      <a href="{{ url_for('reports') }}" class="nav-item {% if request.endpoint == 'reports' %}active{% endif %}">
+      <a href="{{ url_for('reports') }}" class="nav-item {% if request.endpoint == 'reports' %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-chart-bar"></i> Reports
       </a>
 
       {% if current_user.role == 'admin' %}
       <div class="nav-section-label">Admin</div>
-      <a href="{{ url_for('users') }}" class="nav-item {% if 'user' in request.endpoint %}active{% endif %}">
+      <a href="{{ url_for('users') }}" class="nav-item {% if 'user' in request.endpoint %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-users"></i> Users
       </a>
-      <a href="{{ url_for('alert_settings') }}" class="nav-item {% if request.endpoint == 'alert_settings' %}active{% endif %}">
+      <a href="{{ url_for('alert_settings') }}" class="nav-item {% if request.endpoint == 'alert_settings' %}active{% endif %}" onclick="closeSidebar()">
         <i class="fa-solid fa-sliders"></i> Alert Settings
       </a>
       {% endif %}
@@ -720,18 +896,49 @@
       <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
       <div class="topbar-actions">
         <a href="{{ url_for('add_item') }}" class="btn btn-primary btn-sm">
-          <i class="fa-solid fa-plus"></i> Add Asset
+          <i class="fa-solid fa-plus"></i>
+          <span class="topbar-btn-label"> Add Asset</span>
         </a>
-        <a href="{{ url_for('alerts') }}" class="btn btn-outline btn-sm">
+        <a href="{{ url_for('add_supplier') }}" class="btn btn-primary btn-sm">
+          <i class="fa-solid fa-plus"></i>
+          <span class="topbar-btn-label">Add Suppliers</span>
+        </a>
+        <a href="{{ url_for('alerts') }}" class="btn btn-outline btn-sm topbar-bell">
           <i class="fa-solid fa-bell"></i>
         </a>
       </div>
     </header>
+
+    <!-- Bottom navigation — visible only on mobile (≤600px) -->
+    <nav class="bottom-nav">
+      <div class="bottom-nav-inner">
+        <a href="{{ url_for('dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>Home</span>
+        </a>
+        <a href="{{ url_for('inventory') }}" class="bottom-nav-item {% if 'inventory' in request.endpoint or 'item' in request.endpoint %}active{% endif %}">
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <span>Assets</span>
+        </a>
+        <a href="{{ url_for('add_item') }}" class="bottom-nav-item">
+          <i class="fa-solid fa-plus-circle" style="font-size:28px; color:var(--accent);"></i>
+          <span>Add</span>
+        </a>
+        <a href="{{ url_for('maintenance') }}" class="bottom-nav-item {% if 'maintenance' in request.endpoint %}active{% endif %}">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+          <span>Maint.</span>
+        </a>
+        <a href="{{ url_for('alerts') }}" class="bottom-nav-item {% if request.endpoint == 'alerts' %}active{% endif %}">
+          <i class="fa-solid fa-bell"></i>
+          <span>Alerts</span>
+        </a>
+      </div>
+    </nav>
     {% endif %}
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-      <div class="flash-container" style="padding-top:12px">
+      <div class="flash-container">
         {% for cat, msg in messages %}
         <div class="flash flash-{{ cat }}" id="flash_{{ loop.index }}">
           <i class="fa-solid fa-{% if cat == 'success' %}check-circle{% elif cat == 'danger' %}exclamation-circle{% elif cat == 'warning' %}triangle-exclamation{% else %}info-circle{% endif %}"></i>
@@ -752,12 +959,16 @@
     function toggleSidebar() {
       document.getElementById('sidebar').classList.toggle('open');
       document.getElementById('sidebarOverlay').classList.toggle('show');
+      document.body.style.overflow = document.getElementById('sidebar').classList.contains('open') ? 'hidden' : '';
     }
     function closeSidebar() {
       document.getElementById('sidebar').classList.remove('open');
       document.getElementById('sidebarOverlay').classList.remove('show');
+      document.body.style.overflow = '';
     }
-    // Auto-dismiss flashes
+    // Close sidebar on escape key
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+    // Auto-dismiss flashes after 5s
     setTimeout(() => {
       document.querySelectorAll('.flash').forEach(el => {
         el.style.transition = 'opacity 0.4s';

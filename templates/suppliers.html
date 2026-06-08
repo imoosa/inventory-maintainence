@@ -5,7 +5,14 @@
 {% block extra_head %}
 <style>
   .rating-display { color: var(--accent); font-size: 12px; }
-  .rating-empty { color: var(--text-muted); }
+  .rating-empty   { color: var(--text-muted); }
+  .loc-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    border-radius: 4px; padding: 2px 7px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+  }
+  .loc-sep { color: var(--accent); margin: 0 2px; }
 </style>
 {% endblock %}
 
@@ -27,8 +34,9 @@
       <thead>
         <tr>
           <th>Supplier</th>
+          <th>Address</th>
+          <th>Location</th>
           <th>Contact</th>
-          <th>Email</th>
           <th>Phone</th>
           <th>GST No.</th>
           <th>Rating</th>
@@ -41,30 +49,54 @@
         <tr>
           <td>
             <div style="font-weight:500; color:var(--text-primary)">{{ sup.name }}</div>
-            {% if sup.address %}<div style="font-size:11px; color:var(--text-muted)">{{ sup.address[:50] }}{% if sup.address|length > 50 %}…{% endif %}</div>{% endif %}
+            {% if sup.contact_person %}
+            <div style="font-size:11px; color:var(--text-muted)">{{ sup.contact_person }}</div>
+            {% endif %}
           </td>
-          <td>{{ sup.contact_person or '—' }}</td>
-          <td>
-            {% if sup.email %}
-            <a href="mailto:{{ sup.email }}" style="color:var(--info); font-size:12px">{{ sup.email }}</a>
+
+          <!-- Address -->
+          <td style="max-width:160px">
+            {% if sup.address %}
+            <div style="font-size:12px; color:var(--text-muted); white-space:normal; line-height:1.4">
+              {{ sup.address[:60] }}{% if sup.address|length > 60 %}…{% endif %}
+            </div>
             {% else %}—{% endif %}
           </td>
+
+          <!-- Main / Sub Location -->
+          <td>
+            {% if sup.main_location or sup.sub_location %}
+            <div style="display:flex; flex-direction:column; gap:3px">
+              {% if sup.main_location %}
+              <span class="loc-badge"><i class="fa-solid fa-map-pin" style="font-size:10px"></i>{{ sup.main_location }}</span>
+              {% endif %}
+              {% if sup.sub_location %}
+              <span class="loc-badge"><i class="fa-solid fa-angles-right" style="font-size:10px"></i>{{ sup.sub_location }}</span>
+              {% endif %}
+            </div>
+            {% else %}—{% endif %}
+          </td>
+
+          <td>{{ sup.contact_person or '—' }}</td>
           <td style="font-family:var(--mono); font-size:12px">{{ sup.phone or '—' }}</td>
           <td style="font-family:var(--mono); font-size:11px; color:var(--text-muted)">{{ sup.gst_number or '—' }}</td>
+
           <td>
             {% for i in range(5) %}
             <i class="fa-{% if i < sup.rating %}solid{% else %}regular{% endif %} fa-star {% if i < sup.rating %}rating-display{% else %}rating-empty{% endif %}"></i>
             {% endfor %}
           </td>
+
           <td style="font-family:var(--mono)">{{ sup.items|length }}</td>
+
           <td>
             <div class="flex gap-8">
-              <a href="{{ url_for('edit_supplier', id=sup.id) }}" class="btn btn-outline btn-sm">
+              <a href="{{ url_for('edit_supplier', id=sup.id) }}" class="btn btn-outline btn-sm" title="Edit">
                 <i class="fa-solid fa-pen"></i>
               </a>
               <form method="POST" action="{{ url_for('delete_supplier', id=sup.id) }}" style="display:inline"
                     onsubmit="return confirm('Delete supplier {{ sup.name }}?')">
-                <button class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>
               </form>
             </div>
           </td>

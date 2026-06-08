@@ -5,21 +5,25 @@
 {% block extra_head %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
+  /* Charts stacked 2-col on desktop, 1-col on mobile */
   .dash-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 20px;
+    gap: 14px;
+    margin-top: 16px;
   }
   .dash-full { grid-column: 1 / -1; }
-  .chart-container { height: 220px; position: relative; }
+
+  .chart-container { height: 200px; position: relative; }
+
   .alert-row {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: flex-start; gap: 10px;
     padding: 10px 0;
     border-bottom: 1px solid var(--border);
     font-size: 13px;
   }
   .alert-row:last-child { border-bottom: none; }
+
   .alert-icon {
     width: 28px; height: 28px;
     border-radius: 3px;
@@ -27,12 +31,20 @@
     flex-shrink: 0;
     font-size: 11px;
   }
-  .alert-icon.warranty  { background: rgba(88,166,255,0.15); color: #58a6ff; }
-  .alert-icon.maintenance { background: var(--warning-bg); color: var(--accent); }
-  .alert-icon.low_stock { background: var(--danger-bg); color: var(--danger); }
-  .alert-icon.insurance { background: rgba(188,140,255,0.15); color: #c0a0ff; }
-  .alert-icon.amc       { background: rgba(46,160,67,0.15); color: #56d364; }
-  .alert-meta { font-family: var(--mono); font-size: 9px; color: var(--text-muted); margin-top: 2px; letter-spacing: 0.5px; }
+  .alert-icon.warranty   { background: rgba(88,166,255,0.15); color: #58a6ff; }
+  .alert-icon.maintenance{ background: var(--warning-bg); color: var(--accent); }
+  .alert-icon.low_stock  { background: var(--danger-bg); color: var(--danger); }
+  .alert-icon.insurance  { background: rgba(188,140,255,0.15); color: #c0a0ff; }
+  .alert-icon.amc        { background: rgba(46,160,67,0.15); color: #56d364; }
+
+  .alert-meta {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+
   .maintenance-row {
     display: flex; align-items: center; gap: 10px;
     padding: 9px 0;
@@ -40,6 +52,7 @@
     font-size: 12px;
   }
   .maintenance-row:last-child { border-bottom: none; }
+
   .due-badge {
     font-family: var(--mono);
     font-size: 9px;
@@ -51,6 +64,12 @@
   .due-overdue { background: var(--danger-bg); color: var(--danger); }
   .due-soon    { background: var(--warning-bg); color: var(--accent); }
   .due-ok      { background: var(--info-bg); color: var(--info); }
+
+  /* Mobile: single column dash grid */
+  @media (max-width: 700px) {
+    .dash-grid { grid-template-columns: 1fr; }
+    .chart-container { height: 180px; }
+  }
 </style>
 {% endblock %}
 
@@ -75,13 +94,13 @@
     <div class="stat-sub">below reorder level</div>
   </div>
   <div class="stat-card c-warning" style="--bg-warning: rgba(232,160,32,0.12);">
-    <div class="stat-label">Pending Maintenance</div>
+    <div class="stat-label">Pending Maint.</div>
     <div class="stat-value" style="color: var(--accent);">{{ pending_maintenance }}</div>
     <div class="stat-sub">scheduled tasks</div>
   </div>
   <div class="stat-card c-info">
-    <div class="stat-label">Maintenance Spend</div>
-    <div class="stat-value" style="font-size:22px; padding-top:6px;">₹{{ "{:,.0f}".format(total_maintenance_cost or 0) }}</div>
+    <div class="stat-label">Maint. Spend</div>
+    <div class="stat-value" style="font-size:20px; padding-top:6px;">₹{{ "{:,.0f}".format(total_maintenance_cost or 0) }}</div>
     <div class="stat-sub">total logged cost</div>
   </div>
 </div>
@@ -93,7 +112,7 @@
   <div class="card">
     <div class="card-header">
       <i class="fa-solid fa-chart-line text-accent"></i>
-      <span class="card-title">Monthly Maintenance Cost</span>
+      <span class="card-title">Monthly Cost</span>
     </div>
     <div class="card-body">
       <div class="chart-container">
@@ -106,7 +125,7 @@
   <div class="card">
     <div class="card-header">
       <i class="fa-solid fa-chart-pie text-accent"></i>
-      <span class="card-title">Asset Value by Category</span>
+      <span class="card-title">Value by Category</span>
     </div>
     <div class="card-body">
       <div class="chart-container">
@@ -122,19 +141,19 @@
       <span class="card-title">Recent Alerts</span>
       <a href="{{ url_for('alerts') }}" class="btn btn-outline btn-sm ml-auto">View All</a>
     </div>
-    <div class="card-body">
+    <div class="card-body" style="padding: 0 16px;">
       {% if recent_alerts %}
         {% for alert in recent_alerts %}
         <div class="alert-row">
           <div class="alert-icon {{ alert.alert_type }}">
             <i class="fa-solid fa-{% if alert.alert_type == 'warranty' %}shield-halved{% elif alert.alert_type == 'maintenance' %}screwdriver-wrench{% elif alert.alert_type == 'low_stock' %}box-open{% elif alert.alert_type == 'insurance' %}file-shield{% else %}bell{% endif %}"></i>
           </div>
-          <div>
-            <div style="color: var(--text-primary); font-size:12px;">{{ alert.message }}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="color: var(--text-primary); font-size:12px; line-height:1.4;">{{ alert.message }}</div>
             <div class="alert-meta">{{ alert.alert_type.upper().replace('_',' ') }} · {{ alert.triggered_at.strftime('%d %b') }}</div>
           </div>
           {% if not alert.is_read %}
-          <div style="width:6px;height:6px;background:var(--accent);border-radius:50%;margin-left:auto;flex-shrink:0;"></div>
+          <div style="width:6px;height:6px;background:var(--accent);border-radius:50%;margin-top:4px;flex-shrink:0;"></div>
           {% endif %}
         </div>
         {% endfor %}
@@ -151,20 +170,20 @@
   <div class="card">
     <div class="card-header">
       <i class="fa-solid fa-calendar-check text-accent"></i>
-      <span class="card-title">Upcoming Maintenance</span>
+      <span class="card-title">Upcoming Maint.</span>
       <a href="{{ url_for('maintenance') }}" class="btn btn-outline btn-sm ml-auto">View All</a>
     </div>
-    <div class="card-body">
+    <div class="card-body" style="padding: 0 16px;">
       {% if upcoming_maintenance %}
         {% for ms in upcoming_maintenance %}
         {% set days_left = (ms.due_date.date() - now.date()).days if now is defined else 0 %}
         <div class="maintenance-row">
-          <div>
-            <div style="color:var(--text-primary)">{{ ms.item.name if ms.item else 'Unknown' }}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ ms.item.name if ms.item else 'Unknown' }}</div>
             <div class="alert-meta">{{ ms.item.asset_code if ms.item else '' }}</div>
           </div>
           <span class="due-badge {% if days_left < 0 %}due-overdue{% elif days_left <= 7 %}due-soon{% else %}due-ok{% endif %}">
-            {% if days_left < 0 %}{{ days_left|abs }}d OVERDUE{% elif days_left == 0 %}TODAY{% else %}{{ days_left }}d{% endif %}
+            {% if days_left < 0 %}{{ days_left|abs }}d LATE{% elif days_left == 0 %}TODAY{% else %}{{ days_left }}d{% endif %}
           </span>
         </div>
         {% endfor %}
@@ -191,7 +210,6 @@
   Chart.defaults.borderColor = chartDefaults.borderColor;
   Chart.defaults.font = chartDefaults.font;
 
-  // Monthly cost chart
   const monthlyData = {{ monthly_costs | tojson }};
   new Chart(document.getElementById('costChart'), {
     type: 'bar',
@@ -211,13 +229,12 @@
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: '#1c2128' } },
+        x: { grid: { color: '#1c2128' }, ticks: { maxRotation: 45 } },
         y: { grid: { color: '#1c2128' }, ticks: { callback: v => '₹' + (v/1000).toFixed(0) + 'k' } }
       }
     }
   });
 
-  // Category chart
   const catData = {{ category_values | tojson }};
   const COLORS = ['#e8a020','#58a6ff','#2ea043','#f85149','#bc8cff','#79c0ff','#56d364','#ffa657'];
   new Chart(document.getElementById('catChart'), {
@@ -236,7 +253,10 @@
       maintainAspectRatio: false,
       cutout: '65%',
       plugins: {
-        legend: { position: 'right', labels: { boxWidth: 10, padding: 12 } }
+        legend: {
+          position: window.innerWidth < 600 ? 'bottom' : 'right',
+          labels: { boxWidth: 8, padding: 10, font: { size: 9 } }
+        }
       }
     }
   });

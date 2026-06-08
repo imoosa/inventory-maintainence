@@ -1,61 +1,34 @@
 {% extends "base.html" %}
-{% block title %}{% if item is defined %}Edit Asset{% else %}Add Asset{% endif %} — AssetPro{% endblock %}
-{% block topbar_title %}{% if item is defined %}Edit Asset{% else %}Add Asset{% endif %}{% endblock %}
+{% block title %}Add Asset — AssetPro{% endblock %}
+{% block topbar_title %}Add New Asset{% endblock %}
 
 {% block extra_head %}
 <style>
   .form-section {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    margin-bottom: 16px;
-    overflow: hidden;
+    margin-bottom: 24px;
   }
-  .form-section-header {
-    padding: 12px 18px;
-    border-bottom: 1px solid var(--border);
+  .form-section-heading {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: var(--bg-elevated);
-  }
-  .form-section-title {
     font-family: var(--mono);
     font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    color: var(--accent);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
   }
-  .form-section-body { padding: 18px; }
-  .grid-form-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .grid-form-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-  .col-span-2 { grid-column: span 2; }
-  .col-span-3 { grid-column: span 3; }
-  .file-upload {
-    border: 1px dashed var(--border-bright);
-    border-radius: 3px;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
+  /* Stack form actions on mobile */
+  .form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+    flex-wrap: wrap;
   }
-  .file-upload:hover { border-color: var(--accent); background: var(--accent-glow); }
-  .file-upload input { display: none; }
-  .file-upload-label { font-size: 12px; color: var(--text-muted); cursor: pointer; }
-  .file-upload-label i { display: block; font-size: 20px; margin-bottom: 6px; color: var(--accent); }
-  .rating-stars { display: flex; gap: 4px; }
-  .rating-stars input { display: none; }
-  .rating-stars label {
-    font-size: 18px; cursor: pointer; color: var(--text-muted);
-    transition: color 0.1s;
-  }
-  .rating-stars input:checked ~ label,
-  .rating-stars label:hover,
-  .rating-stars label:hover ~ label { color: var(--accent); }
-
-  @media (max-width: 768px) {
-    .grid-form-2, .grid-form-3 { grid-template-columns: 1fr; }
-    .col-span-2, .col-span-3 { grid-column: span 1; }
+  @media (max-width: 600px) {
+    .form-actions .btn { flex: 1; justify-content: center; }
   }
 </style>
 {% endblock %}
@@ -63,290 +36,498 @@
 {% block content %}
 <div class="page-header">
   <div>
-    <div class="page-title">{% if item is defined %}EDIT ASSET{% else %}NEW ASSET{% endif %}</div>
-    <div class="page-subtitle">{% if item is defined %}// UPDATING: {{ item.name }}{% else %}// REGISTER A NEW ASSET{% endif %}</div>
+    <div class="page-title">ADD ASSET</div>
+    <div class="page-subtitle">// ASSET REGISTRY</div>
   </div>
   <a href="{{ url_for('inventory') }}" class="btn btn-outline">
-    <i class="fa-solid fa-arrow-left"></i> Back
+    <i class="fa-solid fa-arrow-left"></i>
+    <span class="topbar-btn-label"> Back</span>
   </a>
 </div>
 
-<form method="POST" enctype="multipart/form-data"
-      action="{{ url_for('edit_item', id=item.id) if item is defined else url_for('add_item') }}">
+<div class="card">
+  <div class="card-body">
+    <form method="POST" enctype="multipart/form-data">
 
-  <!-- Basic Info -->
-  <div class="form-section">
-    <div class="form-section-header">
-      <i class="fa-solid fa-tag text-accent"></i>
-      <span class="form-section-title">Basic Information</span>
-    </div>
-    <div class="form-section-body">
-      <div class="grid-form-3">
-        <div class="form-group col-span-2">
-          <label class="form-label">Asset Name *</label>
-          <input type="text" name="name" class="form-control"
-                 value="{{ item.name if item is defined else form.get('name','') }}"
-                 placeholder="e.g. Dell PowerEdge R740 Server" required>
+      <!-- Purchase Details -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-receipt"></i> Purchase Details
         </div>
-        <div class="form-group">
-          <label class="form-label">Asset Code</label>
-          <input type="text" name="asset_code" class="form-control"
-                 value="{{ item.asset_code if item is defined else form.get('asset_code','') }}"
-                 placeholder="Auto-generated if blank">
-          <div class="form-hint">Leave blank to auto-generate</div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Category *</label>
-          <select name="category_id" class="form-control" required>
-            <option value="">— Select Category —</option>
-            {% for cat in categories %}
-            <option value="{{ cat.id }}"
-              {% if (item is defined and item.category_id == cat.id) or (form is defined and form.get('category_id')|string == cat.id|string) %}selected{% endif %}>
-              {{ cat.name }}
-            </option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Sub-Category</label>
-          <input type="text" name="sub_category" class="form-control"
-                 value="{{ item.sub_category if item is defined else form.get('sub_category','') }}"
-                 placeholder="e.g. Rack Server">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Supplier</label>
-          <select name="supplier_id" class="form-control">
-            <option value="">— No Supplier —</option>
-            {% for sup in suppliers %}
-            <option value="{{ sup.id }}"
-              {% if item is defined and item.supplier_id == sup.id %}selected{% endif %}>
-              {{ sup.name }}
-            </option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Brand</label>
-          <input type="text" name="brand" class="form-control"
-                 value="{{ item.brand if item is defined else '' }}" placeholder="e.g. Dell">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Model</label>
-          <input type="text" name="model" class="form-control"
-                 value="{{ item.model if item is defined else '' }}" placeholder="e.g. R740">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Serial Number</label>
-          <input type="text" name="serial_number" class="form-control"
-                 value="{{ item.serial_number if item is defined else '' }}" placeholder="Unique serial">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Location & Quantity -->
-  <div class="form-section">
-    <div class="form-section-header">
-      <i class="fa-solid fa-location-dot text-accent"></i>
-      <span class="form-section-title">Location & Quantity</span>
-    </div>
-    <div class="form-section-body">
-      <div class="grid-form-3">
-        <div class="form-group col-span-2">
-          <label class="form-label">Location</label>
-          <input type="text" name="location" class="form-control"
-                 value="{{ item.location if item is defined else '' }}"
-                 placeholder="e.g. Server Room, Floor 2">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Quantity *</label>
-          <input type="number" name="quantity" class="form-control" min="0"
-                 value="{{ item.quantity if item is defined else form.get('quantity', 1) }}" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Reorder Level</label>
-          <input type="number" name="reorder_level" class="form-control" min="0"
-                 value="{{ item.reorder_level if item is defined else 0 }}">
-          <div class="form-hint">Alert when qty falls to this</div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Condition</label>
-          <select name="condition" class="form-control">
-            <option value="">— Select —</option>
-            {% for c in ['New','Excellent','Good','Fair','Poor'] %}
-            <option {% if item is defined and item.condition == c %}selected{% endif %}>{{ c }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Status</label>
-          <select name="status" class="form-control">
-            <option value="active" {% if item is defined and item.status == 'active' %}selected{% endif %}>Active</option>
-            <option value="under_maintenance" {% if item is defined and item.status == 'under_maintenance' %}selected{% endif %}>Under Maintenance</option>
-            <option value="retired" {% if item is defined and item.status == 'retired' %}selected{% endif %}>Retired</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Financial -->
-  <div class="form-section">
-    <div class="form-section-header">
-      <i class="fa-solid fa-indian-rupee-sign text-accent"></i>
-      <span class="form-section-title">Financial Details</span>
-    </div>
-    <div class="form-section-body">
-      <div class="grid-form-3">
-        <div class="form-group">
-          <label class="form-label">Purchase Cost (₹)</label>
-          <input type="number" name="purchase_cost" class="form-control" step="0.01"
-                 value="{{ item.purchase_cost if item is defined else '' }}" placeholder="0.00">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Depreciation Rate (%/yr)</label>
-          <input type="number" name="depreciation_rate" class="form-control" step="0.1"
-                 value="{{ item.depreciation_rate if item is defined else 10 }}" placeholder="10">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Purchase Date</label>
-          <input type="date" name="purchase_date" class="form-control"
-                 value="{{ item.purchase_date.strftime('%Y-%m-%d') if item is defined and item.purchase_date else '' }}">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Dates & Warranties -->
-  <div class="form-section">
-    <div class="form-section-header">
-      <i class="fa-solid fa-calendar text-accent"></i>
-      <span class="form-section-title">Warranty & Insurance</span>
-    </div>
-    <div class="form-section-body">
-      <div class="grid-form-2">
-        <div class="form-group">
-          <label class="form-label">Warranty Expiry</label>
-          <input type="date" name="warranty_expiry" class="form-control"
-                 value="{{ item.warranty_expiry.strftime('%Y-%m-%d') if item is defined and item.warranty_expiry else '' }}">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Insurance Expiry</label>
-          <input type="date" name="insurance_expiry" class="form-control"
-                 value="{{ item.insurance_expiry.strftime('%Y-%m-%d') if item is defined and item.insurance_expiry else '' }}">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- AMC -->
-  <div class="form-section">
-    <div class="form-section-header">
-      <i class="fa-solid fa-file-contract text-accent"></i>
-      <span class="form-section-title">AMC (Annual Maintenance Contract)</span>
-    </div>
-    <div class="form-section-body">
-      <div class="grid-form-2">
-        <div class="form-group col-span-2">
-          <label class="form-label">AMC Provider</label>
-          <input type="text" name="amc_provider" class="form-control"
-                 value="{{ item.amc_provider if item is defined else '' }}" placeholder="Provider company name">
-        </div>
-        <div class="form-group">
-          <label class="form-label">AMC Start Date</label>
-          <input type="date" name="amc_start_date" class="form-control"
-                 value="{{ item.amc_start_date.strftime('%Y-%m-%d') if item is defined and item.amc_start_date else '' }}">
-        </div>
-        <div class="form-group">
-          <label class="form-label">AMC End Date</label>
-          <input type="date" name="amc_end_date" class="form-control"
-                 value="{{ item.amc_end_date.strftime('%Y-%m-%d') if item is defined and item.amc_end_date else '' }}">
-        </div>
-        <div class="form-group">
-          <label class="form-label">AMC Cost (₹)</label>
-          <input type="number" name="amc_cost" class="form-control" step="0.01"
-                 value="{{ item.amc_cost if item is defined and item.amc_cost else '' }}" placeholder="0.00">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Photo -->
-  <div class="form-section">
-    <div class="form-section-header">
-      <i class="fa-solid fa-image text-accent"></i>
-      <span class="form-section-title">Photo & Documents</span>
-    </div>
-    <div class="form-section-body">
-      <div class="grid-form-2">
-        <div class="form-group">
-          <label class="form-label">Asset Photo</label>
-          <label class="file-upload" id="photoLabel">
-            <input type="file" name="photo" accept="image/*" onchange="previewPhoto(this)">
-            <div class="file-upload-label">
-              <i class="fa-solid fa-camera"></i>
-              <span id="photoName">Click to upload photo</span>
-            </div>
-            {% if item is defined and item.photo %}
-            <img src="{{ url_for('static', filename='uploads/photos/' + item.photo) }}"
-                 id="photoPreview" style="max-height:80px;margin-top:8px;border-radius:3px;">
-            {% else %}
-            <img id="photoPreview" style="display:none;max-height:80px;margin-top:8px;border-radius:3px;">
-            {% endif %}
-          </label>
-        </div>
-        <div>
+        <div class="form-grid-2">
           <div class="form-group">
-            <label class="form-label">Invoice</label>
-            <label class="file-upload" style="padding:10px">
-              <input type="file" name="invoice" accept=".pdf,.jpg,.png,.doc,.docx">
-              <div class="file-upload-label">
-                <i class="fa-solid fa-file-invoice" style="display:inline;font-size:14px;margin-right:6px"></i>
-                <span>Upload invoice</span>
-              </div>
-            </label>
+            <label class="form-label">Purchased From</label>
+            <select name="supplier_id" class="form-control">
+              <option value="">— Select Supplier —</option>
+              {% for sup in suppliers %}
+              <option value="{{ sup.id }}">{{ sup.name }}{% if sup.contact_person %} ({{ sup.contact_person }}){% endif %}</option>
+              {% endfor %}
+            </select>
+            <div class="form-hint">Can't find the supplier? <a href="{{ url_for('add_supplier') }}" target="_blank">Add one first</a></div>
           </div>
           <div class="form-group">
-            <label class="form-label">Warranty Card</label>
-            <label class="file-upload" style="padding:10px">
-              <input type="file" name="warranty_card" accept=".pdf,.jpg,.png">
-              <div class="file-upload-label">
-                <i class="fa-solid fa-shield-halved" style="display:inline;font-size:14px;margin-right:6px"></i>
-                <span>Upload warranty card</span>
-              </div>
-            </label>
+            <label class="form-label">Purchase Date</label>
+            <input type="date" name="purchase_date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Purchase Cost (₹)</label>
+            <input type="number" name="purchase_cost" class="form-control" step="1000" placeholder="0">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Upload Bill</label>
+            <input type="file" name="bill_copy" class="form-control" accept=".pdf,.jpg,.png">
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- Basic Info -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-info-circle"></i> Basic Information
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Appliance Name *</label>
+            <input type="text" name="name" class="form-control" required
+                   placeholder="e.g., Samsung Split AC - Bedroom">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select name="category_id" class="form-control">
+              <option value="">Select Category</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Brand</label>
+            <input type="text" name="brand" class="form-control" placeholder="e.g., Samsung, LG, Voltas">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Model</label>
+            <input type="text" name="model" class="form-control" placeholder="Model number">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Serial Number</label>
+            <input type="text" name="serial_number" class="form-control" placeholder="Found on product label">
+          </div>
+          <div class="form-group">
+            <!-- Item Type -->
+<div class="mb-3">
+  <label class="form-label">Item Type</label>
+  <select name="item_type" class="form-control" id="itemType" onchange="toggleConditionFields()">
+    <option value="">-- Select Type --</option>
+    <option value="New">🆕 New</option>
+    <option value="Second Hand">♻️ Second Hand</option>
+  </select>
+</div>
+
+<!-- Shown only if Second Hand -->
+<div id="secondHandFields" style="display:none;">
+  <div class="mb-3">
+    <label class="form-label">Condition</label>
+    <select name="condition" class="form-control">
+      <option value="">-- Select Condition --</option>
+      <option value="Excellent">✨ Excellent</option>
+      <option value="Good">👍 Good</option>
+      <option value="Fair">👌 Fair</option>
+      <option value="Needs Repair">🔧 Needs Repair</option>
+    </select>
   </div>
 
-  <!-- Actions -->
-  <div class="flex gap-8" style="justify-content:flex-end">
-    <a href="{{ url_for('inventory') }}" class="btn btn-outline btn-lg">Cancel</a>
-    <button type="submit" class="btn btn-primary btn-lg">
-      <i class="fa-solid fa-{% if item is defined %}floppy-disk{% else %}plus{% endif %}"></i>
-      {% if item is defined %}Save Changes{% else %}Register Asset{% endif %}
-    </button>
+  <div class="mb-3">
+    <label class="form-label">Age (Months)</label>
+    <input type="number" name="age_months" class="form-control" 
+           min="1" max="1200" placeholder="e.g. 18">
   </div>
+</div>
 
-</form>
-{% endblock %}
-
-{% block extra_scripts %}
 <script>
-function previewPhoto(input) {
-  const preview = document.getElementById('photoPreview');
-  const name = document.getElementById('photoName');
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      preview.src = e.target.result;
-      preview.style.display = 'block';
-      name.textContent = input.files[0].name;
-    };
-    reader.readAsDataURL(input.files[0]);
+function toggleConditionFields() {
+  const type = document.getElementById('itemType').value;
+  const fields = document.getElementById('secondHandFields');
+  fields.style.display = (type === 'Second Hand') ? 'block' : 'none';
+
+  // Clear values when hidden so they don't get submitted
+  if (type !== 'Second Hand') {
+    fields.querySelectorAll('select, input').forEach(el => el.value = '');
   }
 }
+</script>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-location-dot"></i> Location in Home
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Room / Area</label>
+            <input type="text" name="room" class="form-control" placeholder="e.g., Master Bedroom, Kitchen">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Floor / Position</label>
+            <input type="text" name="location" class="form-control" placeholder="e.g., Ground Floor, Wall Mounted">
+          </div>
+        </div>
+      </div>
+
+      
+
+      <!-- Warranty & AMC -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-shield-halved"></i> Warranty &amp; AMC
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Warranty Expiry Date</label>
+            <input type="date" name="warranty_expiry" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Warranty Registration No.</label>
+            <input type="text" name="warranty_registration_no" class="form-control" placeholder="If registered">
+          </div>
+          <div class="form-group">
+            <label class="form-label">AMC Provider</label>
+            <input type="text" name="amc_provider" class="form-control" placeholder="Service contract company">
+          </div>
+          <div class="form-group">
+            <label class="form-label">AMC Start Date</label>
+            <input type="date" name="amc_start_date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">AMC End Date</label>
+            <input type="date" name="amc_end_date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">AMC Cost (₹)</label>
+            <input type="number" name="amc_cost" class="form-control" step="100" placeholder="0">
+          </div>
+        </div>
+      </div>
+      
+
+  
+
+      <!-- Service Schedule -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-calendar-alt"></i> Service Schedule
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Last Service Date</label>
+            <input type="date" name="last_service_date" class="form-control">
+            <div class="form-hint">When was it last serviced?</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Service Interval (days)</label>
+            <input type="number" name="service_interval_days" class="form-control" value="180">
+            <div class="form-hint">AC: 180 · Fridge: 365 · Washing Machine: 365</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Service Provider</label>
+            <input type="text" name="service_provider" class="form-control" placeholder="e.g., Urban Company">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Service Provider Contact</label>
+            <input type="text" name="service_contact" class="form-control" placeholder="Phone number">
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-camera"></i> Photos
+        </div>
+        <div class="form-group">
+          <label class="form-label">Appliance Photo</label>
+          <input type="file" name="photo" class="form-control" accept="image/*" capture="environment">
+          <div class="form-hint">Take a photo or choose from gallery</div>
+        </div>
+      </div>
+
+      <!-- Insurance Section -->
+<div class="form-section">
+  <div class="form-section-heading">
+    <i class="fa-solid fa-shield-heart"></i> Insurance Details
+  </div>
+  <div class="form-grid-2">
+    <div class="form-group">
+      <label class="form-label">Insurance Provider</label>
+      <input type="text" name="insurance_provider" class="form-control" placeholder="e.g., ICICI Lombard, HDFC Ergo">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Insurance Expiry Date</label>
+      <input type="date" name="insurance_expiry" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Policy Number</label>
+      <input type="text" name="insurance_policy_no" class="form-control" placeholder="Insurance policy number">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Insurance Amount (₹)</label>
+      <input type="number" name="insurance_amount" class="form-control" step="1000" placeholder="Sum insured">
+    </div>
+  </div>
+</div>
+      
+       <!-- ── INSTALLATION DETAILS ── -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-header">
+      <i class="fa-solid fa-screwdriver-wrench text-accent"></i>
+      <span class="card-title">Installation Details</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Installation Date</label>
+          <input type="date" name="installation_date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Installed By (Person / Company)</label>
+          <input type="text" name="installation_by" class="form-control"
+                 placeholder="Technician name or company">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Job / Reference No.</label>
+          <input type="text" name="installation_ref_no" class="form-control"
+                 placeholder="Work order or job reference">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Warranty Card No.</label>
+          <input type="text" name="warranty_card_no" class="form-control"
+                 placeholder="Warranty card number">
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Installation Notes</label>
+          <textarea name="installation_notes" class="form-control" rows="3"
+                    placeholder="Any notes about the installation — configuration, site conditions, work done, etc."></textarea>
+        </div>
+
+        <!-- Certificate Upload -->
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">
+            <i class="fa-solid fa-certificate text-accent" style="margin-right:6px"></i>
+            Installation Certificate / Completion Document
+          </label>
+          <input type="file" name="installation_certificate" class="form-control"
+                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+          <div class="form-hint">
+            Upload installation completion certificate, job card, or any related document.
+            Accepted: PDF, JPG, PNG, DOC, DOCX — max 50 MB
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     OPTIONAL: PAYMENT DETAILS (can be added now or later)
+══════════════════════════════════════════════════════ -->
+<div class="card" style="margin-top:16px">
+    <div class="card-header" onclick="toggleSection('paymentSection')" style="cursor:pointer">
+        <i class="fa-solid fa-indian-rupee-sign text-accent"></i>
+        <span class="card-title">Payment Details (Optional)</span>
+        <i class="fa-solid fa-chevron-down" id="paymentIcon" style="margin-left:auto"></i>
+    </div>
+    <div class="card-body" id="paymentSection" style="display:none">
+        <div style="font-family:var(--mono); font-size:10px; color:var(--text-muted); margin-bottom:14px">
+            You can add payment details now or edit the item later to add them.
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label class="form-label">Payment Date</label>
+                <input type="date" name="payment_date" class="form-control"
+                       value="{{ now.strftime('%Y-%m-%d') if now is defined else '' }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Amount (₹)</label>
+                <input type="number" name="amount" step="0.01" class="form-control" placeholder="0.00">
+            </div>
+
+            <!-- Payment Method — radio buttons -->
+            <div class="form-group" style="grid-column:span 2">
+                <label class="form-label">Payment Method</label>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:6px">
+                    <label class="pay-method-btn" data-method="">
+                        <input type="radio" name="payment_method" value="" checked onchange="togglePayFields()">
+                        <span>— None —</span>
+                    </label>
+                    <label class="pay-method-btn" data-method="cash">
+                        <input type="radio" name="payment_method" value="cash" onchange="togglePayFields()">
+                        <span>💵 Cash</span>
+                    </label>
+                    <label class="pay-method-btn" data-method="upi">
+                        <input type="radio" name="payment_method" value="upi" onchange="togglePayFields()">
+                        <span>📱 UPI</span>
+                    </label>
+                    <label class="pay-method-btn" data-method="card">
+                        <input type="radio" name="payment_method" value="card" onchange="togglePayFields()">
+                        <span>💳 Card</span>
+                    </label>
+                    <label class="pay-method-btn" data-method="bank_transfer">
+                        <input type="radio" name="payment_method" value="bank_transfer" onchange="togglePayFields()">
+                        <span>🏦 Bank Transfer</span>
+                    </label>
+                    <label class="pay-method-btn" data-method="cheque">
+                        <input type="radio" name="payment_method" value="cheque" onchange="togglePayFields()">
+                        <span>📄 Cheque</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Invoice / Bill Reference</label>
+                <input type="text" name="invoice_ref" class="form-control" placeholder="Supplier invoice number">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Purpose / Description</label>
+                <input type="text" name="purpose" class="form-control" placeholder="What was this payment for?">
+            </div>
+
+            <!-- UPI fields -->
+            <div class="form-group method-fields" id="fields-upi" style="display:none">
+                <label class="form-label">UPI ID Used</label>
+                <input type="text" name="upi_id" class="form-control" placeholder="yourname@bank">
+            </div>
+            <div class="form-group method-fields" id="fields-upi2" style="display:none">
+                <label class="form-label">UTR / Transaction Reference</label>
+                <input type="text" name="utr_reference" class="form-control" placeholder="12-digit UTR">
+            </div>
+
+            <!-- Card fields -->
+            <div class="form-group method-fields" id="fields-card" style="display:none">
+                <label class="form-label">Card Last 4 Digits</label>
+                <input type="text" name="card_last4" class="form-control" maxlength="4" placeholder="1234">
+            </div>
+            <div class="form-group method-fields" id="fields-card2" style="display:none">
+                <label class="form-label">Card Type</label>
+                <select name="card_type" class="form-control">
+                    <option value="">— Select —</option>
+                    <option>Visa</option>
+                    <option>Mastercard</option>
+                    <option>RuPay</option>
+                    <option>Amex</option>
+                </select>
+            </div>
+
+            <!-- Bank Transfer fields -->
+            <div class="form-group method-fields" id="fields-bank" style="display:none">
+                <label class="form-label">Bank Name</label>
+                <input type="text" name="bank_name" class="form-control" placeholder="e.g. HDFC Bank">
+            </div>
+            <div class="form-group method-fields" id="fields-bank2" style="display:none">
+                <label class="form-label">UTR / Reference No.</label>
+                <input type="text" name="utr_reference" class="form-control" placeholder="UTR number">
+            </div>
+
+            <!-- Cheque fields -->
+            <div class="form-group method-fields" id="fields-cheque" style="display:none">
+                <label class="form-label">Cheque Number</label>
+                <input type="text" name="cheque_number" class="form-control" placeholder="000123">
+            </div>
+            <div class="form-group method-fields" id="fields-cheque2" style="display:none">
+                <label class="form-label">Bank Name</label>
+                <input type="text" name="bank_name_cheque" class="form-control" placeholder="e.g. SBI">
+            </div>
+
+            <div class="form-group" style="grid-column:span 2">
+                <label class="form-label">Receipt (Screenshot / PDF / JPEG)</label>
+                <input type="file" name="receipt_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-save"></i> Save Asset
+        </button>
+        <a href="{{ url_for('inventory') }}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  /* Payment method radio buttons */
+  .pay-method-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .pay-method-btn input[type="radio"] { display: none; }
+  .pay-method-btn.selected {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(var(--accent-rgb, 99,102,241), 0.08);
+  }
+</style>
+
+<script>
+function toggleSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    const icon = document.getElementById(sectionId.replace('Section', 'Icon'));
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        section.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+function togglePayFields() {
+    // Get selected radio value
+    const selected = document.querySelector('input[name="payment_method"]:checked');
+    const method = selected ? selected.value : '';
+
+    // Highlight selected button
+    document.querySelectorAll('.pay-method-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.method === method);
+    });
+
+    // Hide all method-specific fields and clear their values
+    document.querySelectorAll('.method-fields').forEach(el => {
+        el.style.display = 'none';
+        el.querySelectorAll('input, select').forEach(inp => inp.value = '');
+    });
+
+    // Show relevant fields
+    const methodGroups = {
+        upi:           ['fields-upi', 'fields-upi2'],
+        card:          ['fields-card', 'fields-card2'],
+        bank_transfer: ['fields-bank', 'fields-bank2'],
+        cheque:        ['fields-cheque', 'fields-cheque2'],
+    };
+    (methodGroups[method] || []).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'block';
+    });
+}
+
+// Init on page load — ensure all method fields start hidden
+document.addEventListener('DOMContentLoaded', () => togglePayFields());
 </script>
 {% endblock %}

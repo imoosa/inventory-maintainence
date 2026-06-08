@@ -1,101 +1,116 @@
 {% extends "base.html" %}
+{% block title %}Edit Supplier — AssetPro{% endblock %}
+{% block topbar_title %}Edit Supplier{% endblock %}
 
 {% block content %}
-<h2><i class="fas fa-edit"></i> Edit Supplier: {{ supplier.name }}</h2>
-<hr>
-
-<div class="card">
-    <div class="card-body">
-        <form method="POST">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Supplier Name *</label>
-                        <input type="text" name="name" class="form-control" value="{{ supplier.name }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Contact Person</label>
-                        <input type="text" name="contact_person" class="form-control" value="{{ supplier.contact_person or '' }}">
-                    </div>
-                    <div class="mb-3">
-                        <label>Email</label>
-                        <input type="email" name="email" class="form-control" value="{{ supplier.email or '' }}">
-                    </div>
-                    <div class="mb-3">
-                        <label>Phone</label>
-                        <input type="tel" name="phone" class="form-control" value="{{ supplier.phone or '' }}">
-                    </div>
-                    <div class="mb-3">
-                        <label>Alternative Phone</label>
-                        <input type="tel" name="alternative_phone" class="form-control" value="{{ supplier.alternative_phone or '' }}">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>GST Number</label>
-                        <input type="text" name="gst_number" class="form-control" value="{{ supplier.gst_number or '' }}">
-                    </div>
-                    <div class="mb-3">
-                        <label>Payment Terms</label>
-                        <input type="text" name="payment_terms" class="form-control" value="{{ supplier.payment_terms or '' }}">
-                    </div>
-                    <div class="mb-3">
-                        <label>Rating (1-5)</label>
-                        <select name="rating" class="form-control">
-                            <option value="5" {% if supplier.rating == 5 %}selected{% endif %}>★★★★★ (Excellent)</option>
-                            <option value="4" {% if supplier.rating == 4 %}selected{% endif %}>★★★★☆ (Good)</option>
-                            <option value="3" {% if supplier.rating == 3 %}selected{% endif %}>★★★☆☆ (Average)</option>
-                            <option value="2" {% if supplier.rating == 2 %}selected{% endif %}>★★☆☆☆ (Poor)</option>
-                            <option value="1" {% if supplier.rating == 1 %}selected{% endif %}>★☆☆☆☆ (Very Poor)</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label>Address</label>
-                        <textarea name="address" class="form-control" rows="3">{{ supplier.address or '' }}</textarea>
-                    </div>
-                </div>
-            </div>
-            <hr>
-            <button type="submit" class="btn btn-primary">Update Supplier</button>
-            <a href="{{ url_for('suppliers') }}" class="btn btn-secondary">Cancel</a>
-        </form>
-    </div>
+<div class="page-header">
+  <div>
+    <div class="page-title">EDIT SUPPLIER</div>
+    <div class="page-subtitle">// {{ supplier.name | upper }}</div>
+  </div>
+  <a href="{{ url_for('suppliers') }}" class="btn btn-outline">
+    <i class="fa-solid fa-arrow-left"></i> Back
+  </a>
 </div>
 
-<!-- Items supplied by this supplier -->
-<div class="card mt-4">
-    <div class="card-header bg-info text-white">
-        <i class="fas fa-boxes"></i> Items Supplied by {{ supplier.name }}
+<form method="POST" enctype="multipart/form-data">
+
+  <!-- ── SUPPLIER DETAILS ── -->
+  <div class="card">
+    <div class="card-header">
+      <i class="fa-solid fa-truck text-accent"></i>
+      <span class="card-title">Supplier Details</span>
     </div>
     <div class="card-body">
-        {% if supplier.items %}
-        <div class="table-responsive">
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Asset Code</th>
-                        <th>Item Name</th>
-                        <th>Purchase Cost</th>
-                        <th>Location</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in supplier.items %}
-                    <tr>
-                        <td><code>{{ item.asset_code }}</code></td>
-                        <td><a href="{{ url_for('view_asset', item_id=item.id) }}">{{ item.name }}</a></td>
-                        <td>₹{{ "%.2f"|format(item.purchase_cost) }}</td>
-                        <td>{{ item.location or '-' }}</td>
-                        <td><span class="badge bg-success">{{ item.status }}</span></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+      <div class="grid-2">
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Company Name *</label>
+          <input type="text" name="name" class="form-control"
+                 value="{{ supplier.name }}" required placeholder="Full company name">
         </div>
-        {% else %}
-        <p class="text-muted">No items supplied by this vendor yet.</p>
-        {% endif %}
+        <div class="form-group">
+          <label class="form-label">Contact Person</label>
+          <input type="text" name="contact_person" class="form-control"
+                 value="{{ supplier.contact_person or '' }}" placeholder="Primary contact name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control"
+                 value="{{ supplier.email or '' }}" placeholder="contact@company.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" class="form-control"
+                 value="{{ supplier.phone or '' }}" placeholder="+91 98765 43210">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Alternative Phone</label>
+          <input type="text" name="alternative_phone" class="form-control"
+                 value="{{ supplier.alternative_phone or '' }}">
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Address</label>
+          <textarea name="address" class="form-control" rows="2"
+                    placeholder="Full address">{{ supplier.address or '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">GST Number</label>
+          <input type="text" name="gst_number" class="form-control"
+                 value="{{ supplier.gst_number or '' }}" placeholder="22AAAAA0000A1Z5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Terms</label>
+          <input type="text" name="payment_terms" class="form-control"
+                 value="{{ supplier.payment_terms or '' }}" placeholder="e.g. Net 30 days">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rating (1–5)</label>
+          <select name="rating" class="form-control">
+            {% for r in range(1,6) %}
+            <option value="{{ r }}" {% if supplier.rating == r %}selected{% endif %}>
+              {{ '★' * r }}{{ '☆' * (5-r) }} ({{ r }}/5)
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Notes</label>
+          <textarea name="notes" class="form-control" rows="2"
+                    placeholder="Any special notes">{{ supplier.notes or '' }}</textarea>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
+
+  <!-- ── LOCATION ── -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-header">
+      <i class="fa-solid fa-location-dot text-accent"></i>
+      <span class="card-title">Location</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Main Location</label>
+          <input type="text" name="main_location" class="form-control"
+                 value="{{ supplier.main_location or '' }}"
+                 placeholder="e.g. Building A, Main Campus, Site 1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sub Location</label>
+          <input type="text" name="sub_location" class="form-control"
+                 value="{{ supplier.sub_location or '' }}"
+                 placeholder="e.g. Floor 2, North Wing, Room 104">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex gap-8" style="justify-content:flex-end; margin-top:16px">
+    <a href="{{ url_for('suppliers') }}" class="btn btn-outline btn-lg">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-lg">
+      <i class="fa-solid fa-floppy-disk"></i> Save Changes
+    </button>
+  </div>
+</form>
 {% endblock %}

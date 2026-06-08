@@ -12,11 +12,28 @@
     border: 1px solid var(--border);
     padding: 10px 16px;
     border-radius: 4px;
-    flex: 1; min-width: 120px;
+    flex: 1; min-width: 100px;
     text-align: center;
   }
   .pri-stat .pval { font-family: var(--display); font-size: 28px; }
   .pri-stat .plabel { font-family: var(--mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1px; margin-top: 2px; }
+
+  /* Mobile card extras */
+  .m-maint-due {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+  .m-maint-code {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .pri-stat .pval { font-size: 22px; }
+  }
 </style>
 {% endblock %}
 
@@ -25,9 +42,6 @@
   <div>
     <div class="page-title">MAINTENANCE</div>
     <div class="page-subtitle">// SCHEDULED SERVICE TRACKING</div>
-  </div>
-  <div class="flex gap-8">
-    
   </div>
 </div>
 
@@ -55,27 +69,29 @@
 <div class="filter-bar">
   <form method="GET" action="{{ url_for('maintenance') }}">
     <div class="search-bar" style="margin-bottom:0">
-      <select name="status" class="form-control" style="width:150px;">
+      <select name="status" class="form-control" style="width:150px; flex:1; min-width:120px;">
         <option value="">All Status</option>
         {% for s in ['pending','completed','overdue','escalated'] %}
         <option value="{{ s }}" {% if request.args.get('status') == s %}selected{% endif %}>{{ s.title() }}</option>
         {% endfor %}
       </select>
-      <select name="priority" class="form-control" style="width:140px;">
+      <select name="priority" class="form-control" style="width:140px; flex:1; min-width:110px;">
         <option value="">All Priority</option>
         {% for p in ['low','normal','high','critical'] %}
         <option value="{{ p }}" {% if request.args.get('priority') == p %}selected{% endif %}>{{ p.title() }}</option>
         {% endfor %}
       </select>
-      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filter</button>
-      <a href="{{ url_for('maintenance') }}" class="btn btn-outline">Clear</a>
+      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i></button>
+      <a href="{{ url_for('maintenance') }}" class="btn btn-outline"><i class="fa-solid fa-times"></i></a>
     </div>
   </form>
 </div>
 
-<div class="card">
+{% if schedules %}
+
+<!-- ===== DESKTOP TABLE ===== -->
+<div class="card desktop-table">
   <div class="table-wrap">
-    {% if schedules %}
     <table>
       <thead>
         <tr>
@@ -118,25 +134,87 @@
             {% if ms.total_cost %}₹{{ "{:,.0f}".format(ms.total_cost) }}{% else %}—{% endif %}
           </td>
           <td>
-            <div class="flex gap-8">
-              {% if ms.status != 'completed' %}
-              <a href="{{ url_for('complete_maintenance', schedule_id=ms.id) }}" class="btn btn-success btn-sm" title="Complete">
-                <i class="fa-solid fa-check"></i>
-              </a>
-              {% endif %}
-             
-            </div>
+            {% if ms.status != 'completed' %}
+            <a href="{{ url_for('complete_maintenance', schedule_id=ms.id) }}" class="btn btn-success btn-sm" title="Mark Complete">
+              <i class="fa-solid fa-check"></i>
+            </a>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
-    {% else %}
-    <div class="empty-state">
-      <i class="fa-solid fa-calendar-check"></i>
-      <p>No maintenance schedules found</p>
+  </div>
+</div>
+
+<!-- ===== MOBILE CARD LIST ===== -->
+<div class="mobile-card-list">
+  {% for ms in schedules %}
+  <div class="m-card">
+    <div class="m-card-header">
+      <div style="flex:1; min-width:0;">
+        {% if ms.item %}
+        <a href="{{ url_for('view_asset', item_id=ms.item.id) }}" class="m-item-name" style="font-size:14px; font-weight:500; color:var(--text-primary); text-decoration:none;">
+          {{ ms.item.name }}
+        </a>
+        <div class="m-maint-code">{{ ms.item.asset_code }}</div>
+        {% else %}
+        <span style="color:var(--text-muted)">Unknown Asset</span>
+        {% endif %}
+      </div>
+      <span class="badge badge-{{ ms.status }}" style="flex-shrink:0;">{{ ms.status }}</span>
+    </div>
+
+    <div class="m-card-body">
+      <div class="m-card-field">
+        <span class="m-card-label">Due Date</span>
+        <span class="m-card-value">
+          <span class="m-maint-due">{{ ms.due_date.strftime('%d %b %Y') }}</span>
+          {% if ms.status == 'overdue' %}<br><span style="color:var(--danger); font-family:var(--mono); font-size:9px;">⚠ OVERDUE</span>{% endif %}
+        </span>
+      </div>
+      <div class="m-card-field">
+        <span class="m-card-label">Priority</span>
+        <span class="m-card-value">
+          <span class="badge {% if ms.priority == 'critical' %}badge-overdue{% elif ms.priority == 'high' %}badge-pending{% elif ms.priority == 'normal' %}badge-active{% else %}badge-user{% endif %}">{{ ms.priority }}</span>
+        </span>
+      </div>
+      <div class="m-card-field">
+        <span class="m-card-label">Assigned To</span>
+        <span class="m-card-value">{{ ms.assigned_to or '—' }}</span>
+      </div>
+      <div class="m-card-field">
+        <span class="m-card-label">Frequency</span>
+        <span class="m-card-value mono" style="font-size:11px;">
+          {% if ms.frequency_days %}Every {{ ms.frequency_days }}d{% else %}One-time{% endif %}
+        </span>
+      </div>
+      <div class="m-card-field">
+        <span class="m-card-label">Cost</span>
+        <span class="m-card-value mono" style="font-size:11px;">
+          {% if ms.total_cost %}₹{{ "{:,.0f}".format(ms.total_cost) }}{% else %}—{% endif %}
+        </span>
+      </div>
+    </div>
+
+    {% if ms.status != 'completed' %}
+    <div class="m-card-actions">
+      <a href="{{ url_for('complete_maintenance', schedule_id=ms.id) }}" class="btn btn-success btn-sm">
+        <i class="fa-solid fa-check"></i> Mark Complete
+      </a>
     </div>
     {% endif %}
   </div>
+  {% endfor %}
 </div>
+
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fa-solid fa-calendar-check"></i>
+    <p>No maintenance schedules found</p>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}

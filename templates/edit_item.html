@@ -1,188 +1,528 @@
 {% extends "base.html" %}
+{% block title %}Edit Asset — AssetPro{% endblock %}
+{% block topbar_title %}Edit Asset{% endblock %}
+
+{% block extra_head %}
+<style>
+  .form-section {
+    margin-bottom: 24px;
+  }
+  .form-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 600px) {
+    .form-actions .btn { flex: 1; justify-content: center; }
+  }
+  /* Payment method radio buttons */
+  .pay-method-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .pay-method-btn input[type="radio"] { display: none; }
+  .pay-method-btn.selected {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(var(--accent-rgb, 99,102,241), 0.08);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<h2><i class="fas fa-edit"></i> Edit Asset: {{ item.asset_code }}</h2>
-<hr>
-
-<div class="card">
-    <div class="card-body">
-        <form method="POST" enctype="multipart/form-data">
-            <!-- ASSET INFORMATION -->
-            <h5 class="bg-info text-white p-2">🔖 Asset / Barcode Information</h5>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Asset Code</label>
-                        <input type="text" name="asset_code" class="form-control" value="{{ item.asset_code }}" required>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Serial Number</label>
-                        <input type="text" name="serial_number" class="form-control" value="{{ item.serial_number or '' }}">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Brand</label>
-                        <input type="text" name="brand" class="form-control" value="{{ item.brand or '' }}">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Model</label>
-                        <input type="text" name="model" class="form-control" value="{{ item.model or '' }}">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Supplier</label>
-                        <input type="text" name="supplier" class="form-control" value="{{ item.supplier or '' }}">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Purchase Date</label>
-                        <input type="date" name="purchase_date" class="form-control" 
-                               value="{{ item.purchase_date.strftime('%Y-%m-%d') if item.purchase_date else '' }}">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Purchase Cost ($)</label>
-                        <input type="number" name="purchase_cost" class="form-control" step="0.01" 
-                               value="{{ item.purchase_cost or 0 }}">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Item Name</label>
-                        <input type="text" name="name" class="form-control" value="{{ item.name }}" required>
-                    </div>
-                </div>
-            </div>
-            
-            <hr>
-            
-            <!-- GENERAL INFORMATION -->
-            <h5 class="bg-secondary text-white p-2">📦 General Information</h5>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Category</label>
-                        <input type="text" name="category" class="form-control" value="{{ item.category or '' }}">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Location</label>
-                        <input type="text" name="location" class="form-control" value="{{ item.location or '' }}">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Quantity</label>
-                        <input type="number" name="quantity" class="form-control" value="{{ item.quantity }}" required>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Current Value ($)</label>
-                        <input type="number" name="value" class="form-control" step="0.01" value="{{ item.value or 0 }}">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Condition</label>
-                        <select name="condition" class="form-control">
-                            <option value="New" {% if item.condition == 'New' %}selected{% endif %}>New</option>
-                            <option value="Good" {% if item.condition == 'Good' %}selected{% endif %}>Good</option>
-                            <option value="Fair" {% if item.condition == 'Fair' %}selected{% endif %}>Fair</option>
-                            <option value="Poor" {% if item.condition == 'Poor' %}selected{% endif %}>Poor</option>
-                            <option value="Damaged" {% if item.condition == 'Damaged' %}selected{% endif %}>Damaged</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label>Change Photo</label>
-                        <input type="file" name="photo" class="form-control" accept="image/*,application/pdf">
-                        {% if item.photo %}
-                            <small>Current: {{ item.photo }}</small>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Reorder Level</label>
-                        <input type="number" name="reorder_level" class="form-control" value="{{ item.reorder_level or 0 }}">
-                    </div>
-                </div>
-            </div>
-            
-            <hr>
-            
-            <!-- WARRANTY & INSURANCE -->
-            <h5 class="bg-warning text-dark p-2">🛡️ Warranty & Insurance</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Warranty Expiry</label>
-                        <input type="date" name="warranty_expiry" class="form-control" 
-                               value="{{ item.warranty_expiry.strftime('%Y-%m-%d') if item.warranty_expiry else '' }}">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label>Insurance Expiry</label>
-                        <input type="date" name="insurance_expiry" class="form-control" 
-                               value="{{ item.insurance_expiry.strftime('%Y-%m-%d') if item.insurance_expiry else '' }}">
-                    </div>
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">Update Asset</button>
-            <a href="{{ url_for('inventory') }}" class="btn btn-secondary">Cancel</a>
-            <a href="{{ url_for('generate_barcode', item_id=item.id) }}" class="btn btn-success">
-                <i class="fas fa-qrcode"></i> Generate Barcode
-            </a>
-        </form>
-    </div>
+<div class="page-header">
+  <div>
+    <div class="page-title">EDIT ASSET</div>
+    <div class="page-subtitle" style="color:var(--accent); font-family:var(--mono)">{{ item.asset_code }}</div>
+  </div>
+  <div class="flex gap-8">
+    <a href="{{ url_for('generate_barcode', item_id=item.id) }}" class="btn btn-outline">
+      <i class="fa-solid fa-qrcode"></i>
+      <span class="topbar-btn-label"> QR Code</span>
+    </a>
+    <a href="{{ url_for('inventory') }}" class="btn btn-outline">
+      <i class="fa-solid fa-arrow-left"></i>
+      <span class="topbar-btn-label"> Back</span>
+    </a>
+  </div>
 </div>
 
-<hr>
-<h5>Schedule Maintenance</h5>
 <div class="card">
-    <div class="card-body">
-        <form action="{{ url_for('schedule_maintenance', item_id=item.id) }}" method="POST">
-            <div class="row">
-                <div class="col-md-4">
-                    <label>Due Date</label>
-                    <input type="date" name="due_date" class="form-control" required>
-                </div>
-                <div class="col-md-4">
-                    <label>Frequency (days)</label>
-                    <input type="number" name="frequency_days" class="form-control" placeholder="Leave empty for one-time">
-                </div>
-                <div class="col-md-4">
-                    <label>Notes</label>
-                    <input type="text" name="notes" class="form-control">
-                </div>
+  <div class="card-body">
+    <form method="POST" enctype="multipart/form-data">
+
+      <!-- Purchase Details -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-receipt"></i> Purchase Details
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Purchased From (Supplier)</label>
+            <select name="supplier_id" class="form-control">
+              <option value="">— Select Supplier —</option>
+              {% for sup in suppliers %}
+              <option value="{{ sup.id }}" {% if item.supplier_id == sup.id %}selected{% endif %}>
+                {{ sup.name }}{% if sup.contact_person %} ({{ sup.contact_person }}){% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Purchase Date</label>
+            <input type="date" name="purchase_date" class="form-control" 
+                   value="{{ item.purchase_date.strftime('%Y-%m-%d') if item.purchase_date else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Purchase Cost (₹)</label>
+            <input type="number" name="purchase_cost" class="form-control" step="1000" 
+                   value="{{ item.purchase_cost or 0 }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Upload New Bill (optional)</label>
+            <input type="file" name="bill_copy" class="form-control" accept=".pdf,.jpg,.png">
+            {% if item.bill_copy %}
+            <div class="form-hint">Current: {{ item.bill_copy }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Basic Information -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-info-circle"></i> Basic Information
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Appliance Name *</label>
+            <input type="text" name="name" class="form-control" required value="{{ item.name }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select name="category_id" class="form-control">
+              <option value="">Select Category</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if item.category_id == cat.id %}selected{% endif %}>
+                {{ cat.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Brand</label>
+            <input type="text" name="brand" class="form-control" value="{{ item.brand or '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Model</label>
+            <input type="text" name="model" class="form-control" value="{{ item.model or '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Serial Number</label>
+            <input type="text" name="serial_number" class="form-control" value="{{ item.serial_number or '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Item Type</label>
+            <select name="item_type" class="form-control" id="itemType" onchange="toggleConditionFields()">
+              <option value="">-- Select Type --</option>
+              <option value="New" {% if item.item_type == 'New' %}selected{% endif %}>🆕 New</option>
+              <option value="Second Hand" {% if item.item_type == 'Second Hand' %}selected{% endif %}>♻️ Second Hand</option>
+            </select>
+          </div>
+
+          <!-- Condition fields (shown only for Second Hand) -->
+          <div id="secondHandFields" style="display: {% if item.item_type == 'Second Hand' %}block{% else %}none{% endif %};">
+            <div class="form-group">
+              <label class="form-label">Condition</label>
+              <select name="condition" class="form-control">
+                <option value="">-- Select Condition --</option>
+                <option value="Excellent" {% if item.condition == 'Excellent' %}selected{% endif %}>✨ Excellent</option>
+                <option value="Good" {% if item.condition == 'Good' %}selected{% endif %}>👍 Good</option>
+                <option value="Fair" {% if item.condition == 'Fair' %}selected{% endif %}>👌 Fair</option>
+                <option value="Needs Repair" {% if item.condition == 'Needs Repair' %}selected{% endif %}>🔧 Needs Repair</option>
+              </select>
             </div>
-            <button type="submit" class="btn btn-success mt-2">Schedule Maintenance</button>
-        </form>
-    </div>
+            <div class="form-group">
+              <label class="form-label">Age (Months)</label>
+              <input type="number" name="age_months" class="form-control" min="1" max="1200" 
+                     value="{{ item.age_months or '' }}" placeholder="e.g. 18">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location in Home -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-location-dot"></i> Location in Home
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Room / Area</label>
+            <input type="text" name="room" class="form-control" value="{{ item.room or '' }}" placeholder="e.g., Master Bedroom, Kitchen">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Floor / Position</label>
+            <input type="text" name="location" class="form-control" value="{{ item.location or '' }}" placeholder="e.g., Ground Floor, Wall Mounted">
+          </div>
+        </div>
+      </div>
+
+      <!-- Warranty & AMC -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-shield-halved"></i> Warranty &amp; AMC
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Warranty Expiry Date</label>
+            <input type="date" name="warranty_expiry" class="form-control" 
+                   value="{{ item.warranty_expiry.strftime('%Y-%m-%d') if item.warranty_expiry else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Warranty Registration No.</label>
+            <input type="text" name="warranty_registration_no" class="form-control" 
+                   value="{{ item.warranty_registration_no or '' }}" placeholder="If registered">
+          </div>
+          <div class="form-group">
+            <label class="form-label">AMC Provider</label>
+            <input type="text" name="amc_provider" class="form-control" value="{{ item.amc_provider or '' }}" placeholder="Service contract company">
+          </div>
+          <div class="form-group">
+            <label class="form-label">AMC Start Date</label>
+            <input type="date" name="amc_start_date" class="form-control" 
+                   value="{{ item.amc_start_date.strftime('%Y-%m-%d') if item.amc_start_date else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">AMC End Date</label>
+            <input type="date" name="amc_end_date" class="form-control" 
+                   value="{{ item.amc_end_date.strftime('%Y-%m-%d') if item.amc_end_date else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">AMC Cost (₹)</label>
+            <input type="number" name="amc_cost" class="form-control" step="100" value="{{ item.amc_cost or 0 }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Schedule -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-calendar-alt"></i> Service Schedule
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Last Service Date</label>
+            <input type="date" name="last_service_date" class="form-control" 
+                   value="{{ item.last_service_date.strftime('%Y-%m-%d') if item.last_service_date else '' }}">
+            <div class="form-hint">When was it last serviced?</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Service Interval (days)</label>
+            <input type="number" name="service_interval_days" class="form-control" value="{{ item.service_interval_days or 180 }}">
+            <div class="form-hint">AC: 180 · Fridge: 365 · Washing Machine: 365</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Service Provider</label>
+            <input type="text" name="service_provider" class="form-control" value="{{ item.service_provider or '' }}" placeholder="e.g., Urban Company">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Service Provider Contact</label>
+            <input type="text" name="service_contact" class="form-control" value="{{ item.service_contact or '' }}" placeholder="Phone number">
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-camera"></i> Photos
+        </div>
+        <div class="form-group">
+          <label class="form-label">Appliance Photo</label>
+          <input type="file" name="photo" class="form-control" accept="image/*" capture="environment">
+          {% if item.photo %}
+          <div class="form-hint">Current: {{ item.photo }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Insurance Details -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-shield-heart"></i> Insurance Details
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Insurance Provider</label>
+            <input type="text" name="insurance_provider" class="form-control" value="{{ item.insurance_provider or '' }}" placeholder="e.g., ICICI Lombard, HDFC Ergo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Insurance Expiry Date</label>
+            <input type="date" name="insurance_expiry" class="form-control" 
+                   value="{{ item.insurance_expiry.strftime('%Y-%m-%d') if item.insurance_expiry else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Policy Number</label>
+            <input type="text" name="insurance_policy_no" class="form-control" value="{{ item.insurance_policy_no or '' }}" placeholder="Insurance policy number">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Insurance Amount (₹)</label>
+            <input type="number" name="insurance_amount" class="form-control" step="1000" value="{{ item.insurance_amount or 0 }}" placeholder="Sum insured">
+          </div>
+        </div>
+      </div>
+
+      <!-- Installation Details -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-screwdriver-wrench"></i> Installation Details
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Installation Date</label>
+            <input type="date" name="installation_date" class="form-control" 
+                   value="{{ item.installation_date.strftime('%Y-%m-%d') if item.installation_date else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Installed By (Person / Company)</label>
+            <input type="text" name="installation_by" class="form-control" value="{{ item.installation_by or '' }}" placeholder="Technician name or company">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Job / Reference No.</label>
+            <input type="text" name="installation_ref_no" class="form-control" value="{{ item.installation_ref_no or '' }}" placeholder="Work order or job reference">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Warranty Card No.</label>
+            <input type="text" name="warranty_card_no" class="form-control" value="{{ item.warranty_card_no or '' }}" placeholder="Warranty card number">
+          </div>
+          <div class="form-group" style="grid-column:span 2">
+            <label class="form-label">Installation Notes</label>
+            <textarea name="installation_notes" class="form-control" rows="3" placeholder="Any notes about the installation — configuration, site conditions, work done, etc.">{{ item.installation_notes or '' }}</textarea>
+          </div>
+          <div class="form-group" style="grid-column:span 2">
+            <label class="form-label">
+              <i class="fa-solid fa-certificate text-accent" style="margin-right:6px"></i>
+              Installation Certificate / Completion Document
+            </label>
+            <input type="file" name="installation_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+            {% if item.installation_certificate %}
+            <div class="form-hint">Current: {{ item.installation_certificate }}</div>
+            {% endif %}
+            <div class="form-hint">Upload installation completion certificate, job card, or any related document.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Details (Optional - Collapsible) -->
+      <div class="form-section">
+        <div class="form-section-heading" onclick="toggleSection('paymentSection')" style="cursor:pointer">
+          <i class="fa-solid fa-indian-rupee-sign"></i> Payment Details (Optional)
+          <i class="fa-solid fa-chevron-down" id="paymentIcon" style="margin-left:auto"></i>
+        </div>
+        <div id="paymentSection" style="display:none;">
+          <div class="form-hint" style="margin-bottom:14px">
+            You can add payment details now or edit the item later to add them.
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Payment Date</label>
+              <input type="date" name="payment_date" class="form-control" value="{{ now.strftime('%Y-%m-%d') if now is defined else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Amount (₹)</label>
+              <input type="number" name="amount" step="0.01" class="form-control" placeholder="0.00">
+            </div>
+
+            <!-- Payment Method radio buttons -->
+            <div class="form-group" style="grid-column:span 2">
+              <label class="form-label">Payment Method</label>
+              <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:6px">
+                <label class="pay-method-btn" data-method="">
+                  <input type="radio" name="payment_method" value="" checked onchange="togglePayFields()">
+                  <span>— None —</span>
+                </label>
+                <label class="pay-method-btn" data-method="cash">
+                  <input type="radio" name="payment_method" value="cash" onchange="togglePayFields()">
+                  <span>💵 Cash</span>
+                </label>
+                <label class="pay-method-btn" data-method="upi">
+                  <input type="radio" name="payment_method" value="upi" onchange="togglePayFields()">
+                  <span>📱 UPI</span>
+                </label>
+                <label class="pay-method-btn" data-method="card">
+                  <input type="radio" name="payment_method" value="card" onchange="togglePayFields()">
+                  <span>💳 Card</span>
+                </label>
+                <label class="pay-method-btn" data-method="bank_transfer">
+                  <input type="radio" name="payment_method" value="bank_transfer" onchange="togglePayFields()">
+                  <span>🏦 Bank Transfer</span>
+                </label>
+                <label class="pay-method-btn" data-method="cheque">
+                  <input type="radio" name="payment_method" value="cheque" onchange="togglePayFields()">
+                  <span>📄 Cheque</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Invoice / Bill Reference</label>
+              <input type="text" name="invoice_ref" class="form-control" placeholder="Supplier invoice number">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Purpose / Description</label>
+              <input type="text" name="purpose" class="form-control" placeholder="What was this payment for?">
+            </div>
+
+            <!-- UPI fields -->
+            <div class="form-group method-fields" id="fields-upi" style="display:none">
+              <label class="form-label">UPI ID Used</label>
+              <input type="text" name="upi_id" class="form-control" placeholder="yourname@bank">
+            </div>
+            <div class="form-group method-fields" id="fields-upi2" style="display:none">
+              <label class="form-label">UTR / Transaction Reference</label>
+              <input type="text" name="utr_reference" class="form-control" placeholder="12-digit UTR">
+            </div>
+
+            <!-- Card fields -->
+            <div class="form-group method-fields" id="fields-card" style="display:none">
+              <label class="form-label">Card Last 4 Digits</label>
+              <input type="text" name="card_last4" class="form-control" maxlength="4" placeholder="1234">
+            </div>
+            <div class="form-group method-fields" id="fields-card2" style="display:none">
+              <label class="form-label">Card Type</label>
+              <select name="card_type" class="form-control">
+                <option value="">— Select —</option>
+                <option>Visa</option>
+                <option>Mastercard</option>
+                <option>RuPay</option>
+                <option>Amex</option>
+              </select>
+            </div>
+
+            <!-- Bank Transfer fields -->
+            <div class="form-group method-fields" id="fields-bank" style="display:none">
+              <label class="form-label">Bank Name</label>
+              <input type="text" name="bank_name" class="form-control" placeholder="e.g. HDFC Bank">
+            </div>
+            <div class="form-group method-fields" id="fields-bank2" style="display:none">
+              <label class="form-label">UTR / Reference No.</label>
+              <input type="text" name="utr_reference" class="form-control" placeholder="UTR number">
+            </div>
+
+            <!-- Cheque fields -->
+            <div class="form-group method-fields" id="fields-cheque" style="display:none">
+              <label class="form-label">Cheque Number</label>
+              <input type="text" name="cheque_number" class="form-control" placeholder="000123">
+            </div>
+            <div class="form-group method-fields" id="fields-cheque2" style="display:none">
+              <label class="form-label">Bank Name</label>
+              <input type="text" name="bank_name_cheque" class="form-control" placeholder="e.g. SBI">
+            </div>
+
+            <div class="form-group" style="grid-column:span 2">
+              <label class="form-label">Receipt (Screenshot / PDF / JPEG)</label>
+              <input type="file" name="receipt_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="form-section">
+        <div class="form-section-heading">
+          <i class="fa-solid fa-circle-info"></i> Asset Status
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-control">
+            <option value="active" {% if item.status == 'active' %}selected{% endif %}>Active</option>
+            <option value="under_maintenance" {% if item.status == 'under_maintenance' %}selected{% endif %}>Under Maintenance</option>
+            <option value="retired" {% if item.status == 'retired' %}selected{% endif %}>Retired</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-save"></i> Update Asset
+        </button>
+        <a href="{{ url_for('inventory') }}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
 </div>
+
+<script>
+function toggleConditionFields() {
+  const type = document.getElementById('itemType').value;
+  const fields = document.getElementById('secondHandFields');
+  fields.style.display = (type === 'Second Hand') ? 'block' : 'none';
+}
+
+function toggleSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  const icon = document.getElementById('paymentIcon');
+  if (section.style.display === 'none') {
+    section.style.display = 'block';
+    icon.style.transform = 'rotate(180deg)';
+  } else {
+    section.style.display = 'none';
+    icon.style.transform = 'rotate(0deg)';
+  }
+}
+
+function togglePayFields() {
+  const selected = document.querySelector('input[name="payment_method"]:checked');
+  const method = selected ? selected.value : '';
+
+  document.querySelectorAll('.pay-method-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.method === method);
+  });
+
+  document.querySelectorAll('.method-fields').forEach(el => {
+    el.style.display = 'none';
+    el.querySelectorAll('input, select').forEach(inp => inp.value = '');
+  });
+
+  const methodGroups = {
+    upi: ['fields-upi', 'fields-upi2'],
+    card: ['fields-card', 'fields-card2'],
+    bank_transfer: ['fields-bank', 'fields-bank2'],
+    cheque: ['fields-cheque', 'fields-cheque2'],
+  };
+  (methodGroups[method] || []).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  togglePayFields();
+  toggleConditionFields();
+});
+</script>
 {% endblock %}
